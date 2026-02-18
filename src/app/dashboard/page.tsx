@@ -1,5 +1,7 @@
 import { DetailedDashboard } from "@/components/dashboard/DetailedDashboard";
 
+export const dynamic = "force-dynamic";
+
 export default function DashboardPage() {
   return (
     <main className="mx-auto flex min-h-screen w-full flex-col gap-3 px-[5vw] py-3 sm:gap-4 sm:py-4">

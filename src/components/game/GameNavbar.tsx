@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import Image from "next/image";
@@ -17,6 +17,7 @@ interface GameNavbarProps {
 
 const NAV_ICON_CLASS =
   "inline-flex h-12 w-12 items-center justify-center rounded-2xl border-0 bg-transparent shadow-none transition duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 sm:h-14 sm:w-14";
+const LAST_SESSION_STORAGE_KEY = "diner_dash_last_session_id";
 
 const ICON_MOTION = {
   whileHover: { y: -4, scale: 1.2 },
@@ -65,8 +66,48 @@ export function GameNavbar({
   onProfileClick,
 }: GameNavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [lastSessionId, setLastSessionId] = useState<string | null>(null);
 
   const closeMobileMenu = () => setMobileOpen(false);
+  const dashboardHref = useMemo(
+    () =>
+      lastSessionId
+        ? `/dashboard?session=${encodeURIComponent(lastSessionId)}`
+        : "/dashboard",
+    [lastSessionId],
+  );
+
+  useEffect(() => {
+    const syncFromStorage = () => {
+      try {
+        const value = window.localStorage.getItem(LAST_SESSION_STORAGE_KEY);
+        setLastSessionId(value && value.trim() ? value : null);
+      } catch {
+        setLastSessionId(null);
+      }
+    };
+
+    const onSessionUpdated = (
+      event: Event,
+    ) => {
+      const customEvent = event as CustomEvent<{ sessionId?: string }>;
+      const nextSessionId = customEvent.detail?.sessionId ?? null;
+      if (nextSessionId) {
+        setLastSessionId(nextSessionId);
+        return;
+      }
+      syncFromStorage();
+    };
+
+    syncFromStorage();
+    window.addEventListener("focus", syncFromStorage);
+    window.addEventListener("dinerDashSessionUpdated", onSessionUpdated as EventListener);
+
+    return () => {
+      window.removeEventListener("focus", syncFromStorage);
+      window.removeEventListener("dinerDashSessionUpdated", onSessionUpdated as EventListener);
+    };
+  }, []);
 
   return (
     <motion.nav
@@ -89,7 +130,7 @@ export function GameNavbar({
         <div className="hidden items-center gap-1 md:flex">
           <motion.div {...ICON_MOTION}>
             <Link
-              href="/dashboard"
+              href={dashboardHref}
               title="Dashboard"
               aria-label="Dashboard"
               className={NAV_ICON_CLASS}
@@ -168,7 +209,7 @@ export function GameNavbar({
           >
             <motion.div {...ICON_MOTION}>
               <Link
-                href="/dashboard"
+                href={dashboardHref}
                 title="Dashboard"
                 aria-label="Dashboard"
                 className={NAV_ICON_CLASS}

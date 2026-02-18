@@ -1,132 +1,18 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { Bar, Line } from "react-chartjs-2";
-import Image from "next/image";
 
+import {
+  createFallbackDashboardMetrics,
+  type DashboardMetrics,
+} from "@/lib/dashboard/types";
 import { registerChartJs } from "@/lib/charts/register";
 
 registerChartJs();
-
-const funnelData = {
-  labels: ["Order Placed", "Dish Selected", "Order Served", "Order Completed"],
-  datasets: [
-    {
-      label: "Orders",
-      data: [124, 108, 92, 81],
-      backgroundColor: ["#d4500a", "#00a693", "#c8960c", "#800020"],
-      borderRadius: 8,
-    },
-  ],
-};
-
-const speedTierData = {
-  labels: ["Minute 1", "Minute 2", "Minute 3", "Minute 4", "Minute 5"],
-  datasets: [
-    {
-      label: "Fast (Green)",
-      data: [5, 7, 8, 9, 10],
-      backgroundColor: "#3fb950",
-      stack: "speed",
-    },
-    {
-      label: "OK (Yellow)",
-      data: [8, 7, 6, 5, 4],
-      backgroundColor: "#e3b341",
-      stack: "speed",
-    },
-    {
-      label: "Slow (Red)",
-      data: [3, 3, 2, 2, 1],
-      backgroundColor: "#f85149",
-      stack: "speed",
-    },
-  ],
-};
-
-const revenueDishData = {
-  labels: ["Dosa", "Chole Bhature", "Parathe", "Pani Puri", "Vada Pav"],
-  datasets: [
-    {
-      label: "Revenue (INR)",
-      data: [1220, 940, 860, 990, 740],
-      backgroundColor: ["#d4500a", "#800020", "#c8960c", "#00a693", "#6b3f1d"],
-      borderRadius: 8,
-    },
-  ],
-};
-
-const utilizationData = {
-  labels: ["0s", "10s", "20s", "30s", "40s", "50s", "60s"],
-  datasets: [
-    {
-      label: "Occupied Seats",
-      data: [0, 2, 4, 4, 3, 4, 2],
-      borderColor: "#00a693",
-      backgroundColor: "rgba(0, 166, 147, 0.20)",
-      fill: true,
-      tension: 0.35,
-      pointRadius: 3,
-    },
-  ],
-};
-
-const satisfactionData = {
-  labels: ["0s", "10s", "20s", "30s", "40s", "50s", "60s"],
-  datasets: [
-    {
-      label: "Reputation",
-      data: [50, 56, 61, 67, 72, 76, 81],
-      borderColor: "#800020",
-      backgroundColor: "rgba(128, 0, 32, 0.18)",
-      fill: true,
-      tension: 0.3,
-      pointRadius: 3,
-    },
-  ],
-};
-
-const throughputData = {
-  labels: ["0-10s", "10-20s", "20-30s", "30-40s", "40-50s", "50-60s"],
-  datasets: [
-    {
-      label: "Orders Completed",
-      data: [4, 9, 15, 18, 20, 15],
-      borderColor: "#d4500a",
-      backgroundColor: "rgba(212, 80, 10, 0.18)",
-      fill: true,
-      tension: 0.35,
-      pointRadius: 3,
-    },
-    {
-      label: "Orders Expired",
-      data: [0, 1, 2, 3, 3, 2],
-      borderColor: "#800020",
-      backgroundColor: "rgba(128, 0, 32, 0.14)",
-      fill: true,
-      tension: 0.35,
-      pointRadius: 3,
-    },
-  ],
-};
-
-const dishDemandVsServedData = {
-  labels: ["Dosa", "Chole Bhature", "Parathe", "Pani Puri", "Vada Pav"],
-  datasets: [
-    {
-      label: "Requested",
-      data: [29, 24, 20, 23, 18],
-      backgroundColor: "rgba(128, 0, 32, 0.62)",
-      borderRadius: 8,
-    },
-    {
-      label: "Served",
-      data: [26, 22, 18, 21, 16],
-      backgroundColor: "rgba(0, 166, 147, 0.72)",
-      borderRadius: 8,
-    },
-  ],
-};
 
 const chartOptions = {
   responsive: true,
@@ -151,50 +37,318 @@ const chartOptions = {
   },
 };
 
-const KPI_CARDS = [
-  {
-    label: "Orders Served",
-    value: "81",
-    tone: "text-emerald-700",
-    icon: "/sprite/female-customer-1.png",
-  },
-  {
-    label: "Orders Expired",
-    value: "11",
-    tone: "text-red-700",
-    icon: "/sprite/male-customer-2.png",
-  },
-  {
-    label: "Revenue",
-    value: "INR 4,750",
-    tone: "text-amber-700",
-    icon: "/elements/coin.png",
-  },
-  {
-    label: "Avg Serve Time",
-    value: "6.9s",
-    tone: "text-cyan-700",
-    icon: "/elements/tray.png",
-  },
-  {
-    label: "Peak Utilization",
-    value: "4 / 4 seats",
-    tone: "text-rose-700",
-    icon: "/ui/wooden-table.png",
-  },
-  {
-    label: "Final Reputation",
-    value: "81",
-    tone: "text-fuchsia-700",
-    icon: "/sprite/female-customer-2.png",
-  },
-];
+type MetricsResponse = {
+  ok: boolean;
+  metrics?: DashboardMetrics;
+  warning?: string;
+  error?: string;
+};
 
 export function DetailedDashboard() {
+  const searchParams = useSearchParams();
+  const sessionId = searchParams.get("session");
+
+  const [metrics, setMetrics] = useState<DashboardMetrics>(() =>
+    createFallbackDashboardMetrics(sessionId),
+  );
+  const [loading, setLoading] = useState(true);
+  const [warning, setWarning] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+
+    const load = async () => {
+      setLoading(true);
+      setWarning(null);
+
+      try {
+        const query = sessionId ? `?session_id=${encodeURIComponent(sessionId)}` : "";
+        const response = await fetch(`/api/dashboard/metrics${query}`, {
+          method: "GET",
+          cache: "no-store",
+        });
+
+        if (!active) {
+          return;
+        }
+
+        const data = (await response.json()) as MetricsResponse;
+        if (response.ok && data.ok && data.metrics) {
+          setMetrics(data.metrics);
+          if (data.warning) {
+            setWarning(data.warning);
+          }
+        } else {
+          setWarning(data.error ?? "dashboard_data_unavailable");
+          setMetrics(createFallbackDashboardMetrics(sessionId));
+        }
+      } catch {
+        if (!active) {
+          return;
+        }
+        setWarning("dashboard_fetch_failed");
+        setMetrics(createFallbackDashboardMetrics(sessionId));
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void load();
+
+    return () => {
+      active = false;
+    };
+  }, [sessionId]);
+
+  const funnelData = useMemo(
+    () => ({
+      labels: metrics.funnel.labels,
+      datasets: [
+        {
+          label: "Orders",
+          data: metrics.funnel.values,
+          backgroundColor: ["#d4500a", "#00a693", "#c8960c", "#800020"],
+          borderRadius: 8,
+        },
+      ],
+    }),
+    [metrics.funnel.labels, metrics.funnel.values],
+  );
+
+  const speedTierData = useMemo(
+    () => ({
+      labels: metrics.speedTiers.labels,
+      datasets: [
+        {
+          label: "Fast (Green)",
+          data: metrics.speedTiers.green,
+          backgroundColor: "#3fb950",
+          stack: "speed",
+        },
+        {
+          label: "OK (Yellow)",
+          data: metrics.speedTiers.yellow,
+          backgroundColor: "#e3b341",
+          stack: "speed",
+        },
+        {
+          label: "Slow (Red)",
+          data: metrics.speedTiers.red,
+          backgroundColor: "#f85149",
+          stack: "speed",
+        },
+      ],
+    }),
+    [
+      metrics.speedTiers.green,
+      metrics.speedTiers.labels,
+      metrics.speedTiers.red,
+      metrics.speedTiers.yellow,
+    ],
+  );
+
+  const revenueDishData = useMemo(
+    () => ({
+      labels: metrics.revenuePerDish.labels,
+      datasets: [
+        {
+          label: "Revenue (INR)",
+          data: metrics.revenuePerDish.values,
+          backgroundColor: ["#d4500a", "#800020", "#c8960c", "#00a693", "#6b3f1d"],
+          borderRadius: 8,
+        },
+      ],
+    }),
+    [metrics.revenuePerDish.labels, metrics.revenuePerDish.values],
+  );
+
+  const utilizationData = useMemo(
+    () => ({
+      labels: metrics.utilization.labels,
+      datasets: [
+        {
+          label: "Occupied Seats",
+          data: metrics.utilization.occupied,
+          borderColor: "#00a693",
+          backgroundColor: "rgba(0, 166, 147, 0.20)",
+          fill: true,
+          tension: 0.35,
+          pointRadius: 3,
+        },
+      ],
+    }),
+    [metrics.utilization.labels, metrics.utilization.occupied],
+  );
+
+  const satisfactionData = useMemo(
+    () => ({
+      labels: metrics.satisfaction.labels,
+      datasets: [
+        {
+          label: "Reputation",
+          data: metrics.satisfaction.reputation,
+          borderColor: "#800020",
+          backgroundColor: "rgba(128, 0, 32, 0.18)",
+          fill: true,
+          tension: 0.3,
+          pointRadius: 3,
+        },
+      ],
+    }),
+    [metrics.satisfaction.labels, metrics.satisfaction.reputation],
+  );
+
+  const throughputData = useMemo(
+    () => ({
+      labels: metrics.throughput.labels,
+      datasets: [
+        {
+          label: "Orders Completed",
+          data: metrics.throughput.completed,
+          borderColor: "#d4500a",
+          backgroundColor: "rgba(212, 80, 10, 0.18)",
+          fill: true,
+          tension: 0.35,
+          pointRadius: 3,
+        },
+        {
+          label: "Orders Expired",
+          data: metrics.throughput.expired,
+          borderColor: "#800020",
+          backgroundColor: "rgba(128, 0, 32, 0.14)",
+          fill: true,
+          tension: 0.35,
+          pointRadius: 3,
+        },
+      ],
+    }),
+    [metrics.throughput.completed, metrics.throughput.expired, metrics.throughput.labels],
+  );
+
+  const dishDemandVsServedData = useMemo(
+    () => ({
+      labels: metrics.demandVsServed.labels,
+      datasets: [
+        {
+          label: "Requested",
+          data: metrics.demandVsServed.requested,
+          backgroundColor: "rgba(128, 0, 32, 0.62)",
+          borderRadius: 8,
+        },
+        {
+          label: "Served",
+          data: metrics.demandVsServed.served,
+          backgroundColor: "rgba(0, 166, 147, 0.72)",
+          borderRadius: 8,
+        },
+      ],
+    }),
+    [
+      metrics.demandVsServed.labels,
+      metrics.demandVsServed.requested,
+      metrics.demandVsServed.served,
+    ],
+  );
+
+  const kpiCards = useMemo(
+    () => [
+      {
+        label: "Orders Served",
+        value: metrics.kpis.ordersServed.toString(),
+        tone: "text-emerald-700",
+        icon: "/sprite/female-customer-1.png",
+      },
+      {
+        label: "Orders Expired",
+        value: metrics.kpis.ordersExpired.toString(),
+        tone: "text-red-700",
+        icon: "/sprite/male-customer-2.png",
+      },
+      {
+        label: "Revenue",
+        value: `INR ${metrics.kpis.revenue.toLocaleString("en-IN")}`,
+        tone: "text-amber-700",
+        icon: "/elements/coin.png",
+      },
+      {
+        label: "Avg Serve Time",
+        value: `${metrics.kpis.avgServeTimeSeconds.toFixed(1)}s`,
+        tone: "text-cyan-700",
+        icon: "/elements/tray.png",
+      },
+      {
+        label: "Peak Utilization",
+        value: `${metrics.kpis.peakUtilization} seats`,
+        tone: "text-rose-700",
+        icon: "/ui/wooden-table.png",
+      },
+      {
+        label: "Final Reputation",
+        value: metrics.kpis.finalReputation.toString(),
+        tone: "text-fuchsia-700",
+        icon: "/sprite/female-customer-2.png",
+      },
+    ],
+    [metrics.kpis],
+  );
+  const validationTopCounts = useMemo(
+    () =>
+      Object.entries(metrics.validation.eventCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 6),
+    [metrics.validation.eventCounts],
+  );
+
   return (
     <section className="space-y-4">
+      <article className="panel border-[color:var(--turquoise)] p-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs uppercase tracking-[0.16em] text-[color:var(--turquoise)]">
+            Analytics Source
+          </p>
+          <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-950">
+            {loading
+              ? "Loading..."
+              : metrics.source === "snowflake"
+                ? "Live Snowflake"
+                : "Fallback Sample"}
+          </span>
+        </div>
+        <p className="mt-2 text-sm text-amber-950/85">
+          Session: {metrics.sessionId ?? "All sessions"} | Events: {metrics.validation.totalEvents} |
+          Event types: {metrics.validation.distinctEventTypes}
+        </p>
+        <p className="mt-1 text-xs text-amber-950/70">
+          Last event: {metrics.validation.lastEventAt ?? "N/A"}
+        </p>
+        {warning ? (
+          <p className="mt-1 text-xs text-rose-700">Warning: {warning}</p>
+        ) : null}
+        {metrics.validation.missingEventTypes.length > 0 ? (
+          <p className="mt-1 text-xs text-amber-900/80">
+            Missing event types for this filter: {metrics.validation.missingEventTypes.join(", ")}
+          </p>
+        ) : (
+          <p className="mt-1 text-xs text-emerald-700">All expected event types observed.</p>
+        )}
+        {validationTopCounts.length > 0 ? (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {validationTopCounts.map(([eventName, count]) => (
+              <span
+                key={eventName}
+                className="rounded-full bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-900"
+              >
+                {eventName}: {count}
+              </span>
+            ))}
+          </div>
+        ) : null}
+      </article>
+
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {KPI_CARDS.map((card, idx) => (
+        {kpiCards.map((card, idx) => (
           <motion.article
             key={card.label}
             className="panel border-[color:var(--gold)] bg-[linear-gradient(145deg,rgba(255,255,255,0.9),rgba(255,245,228,0.88))] p-4"
@@ -204,18 +358,10 @@ export function DetailedDashboard() {
           >
             <div className="flex items-center gap-3">
               <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-white/75 shadow-[0_6px_14px_rgba(60,37,18,0.18)]">
-                <Image
-                  src={card.icon}
-                  alt=""
-                  fill
-                  className="object-contain p-1"
-                  sizes="56px"
-                />
+                <Image src={card.icon} alt="" fill className="object-contain p-1" sizes="56px" />
               </div>
               <div>
-                <p className="text-xs uppercase tracking-wide text-amber-950/70">
-                  {card.label}
-                </p>
+                <p className="text-xs uppercase tracking-wide text-amber-950/70">{card.label}</p>
                 <p className={`mt-0.5 text-2xl font-bold ${card.tone}`}>{card.value}</p>
               </div>
             </div>

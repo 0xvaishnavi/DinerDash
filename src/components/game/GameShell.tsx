@@ -96,14 +96,16 @@ const COUNTER_RESPAWN_MS = 3000;
 const CUSTOMER_LEAVE_DELAY_MS = 500;
 const EXPIRED_CUSTOMER_FADE_MS = 1000;
 const CUSTOMER_WALK_DURATION_MS = 1200;
-const ENTRANCE_X_PERCENT = 10;
-const ENTRANCE_Y_PERCENT = 10;
+const ENTRANCE_X_PERCENT = 50;
+const ENTRANCE_Y_PERCENT = 8;
 const TABLE_SPRITE_TOP_PERCENT = 58;
 const CUSTOMER_BASE_OFFSET_PERCENT = 2;
 const CUSTOMER_Y_OFFSET_MULTIPLIER = 11;
 const CUSTOMER_TOP_PERCENT =
   TABLE_SPRITE_TOP_PERCENT - CUSTOMER_BASE_OFFSET_PERCENT * CUSTOMER_Y_OFFSET_MULTIPLIER;
-const ORDER_BUBBLE_TOP_PERCENT = -10;
+const ORDER_BUBBLE_TOP_PERCENT = -11.5;
+const LAST_SESSION_STORAGE_KEY = "diner_dash_last_session_id";
+const TABLE_TOP_SAFE_PADDING_PX = 12;
 
 function getPendingDishes(customer: ActiveCustomer): DishName[] {
   const served = [...customer.dishesServed];
@@ -213,13 +215,24 @@ function getTablePositions(seats: number): TablePosition[] {
   const columns = seats <= 4 ? 2 : seats <= 6 ? 3 : 4;
   const rows = Math.ceil(seats / columns);
   const xForTwoCols = [28, 72];
-  const rowSpacingMultiplier = 1.44;
+  const threeColumnSpreadMultiplier = 1.1;
+  const rowSpacingMultiplier = 1.73;
 
   return Array.from({ length: seats }, (_, index) => {
     const col = index % columns;
     const row = Math.floor(index / columns);
-    const xPercent =
-      columns === 2 ? xForTwoCols[col] : ((col + 1) / (columns + 1)) * 100;
+    const xPercent = (() => {
+      if (columns === 2) {
+        return xForTwoCols[col];
+      }
+      const normalizedX = (col + 1) / (columns + 1);
+      if (columns === 3) {
+        const spreadX =
+          0.5 + (normalizedX - 0.5) * threeColumnSpreadMultiplier;
+        return clamp(spreadX, 0.08, 0.92) * 100;
+      }
+      return normalizedX * 100;
+    })();
     const normalizedRow = (row + 1) / (rows + 1);
     const spreadRow = 0.5 + (normalizedRow - 0.5) * rowSpacingMultiplier;
     const yPercent = clamp(spreadRow, 0.08, 0.92) * 100;
@@ -275,7 +288,11 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
     () => createCounterCooldowns(),
   );
   const [coinBursts, setCoinBursts] = useState<CoinBurst[]>([]);
-  const [arenaMetrics, setArenaMetrics] = useState({ floorHeight: 0, counterHeight: 0 });
+  const [arenaMetrics, setArenaMetrics] = useState({
+    floorHeight: 0,
+    counterHeight: 0,
+    entranceBottom: 0,
+  });
   const [roundResult, setRoundResult] = useState<RoundSummary | null>(null);
 
   const customersRef = useRef<ActiveCustomer[]>([]);
@@ -286,6 +303,7 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
   const ordersExpiredRef = useRef(ordersExpired);
   const floorRef = useRef<HTMLDivElement | null>(null);
   const counterRef = useRef<HTMLDivElement | null>(null);
+  const entranceRef = useRef<HTMLDivElement | null>(null);
   const tableRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const counterDishRefs = useRef<Record<DishName, HTMLButtonElement | null>>(
     {} as Record<DishName, HTMLButtonElement | null>,
@@ -313,6 +331,19 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
 
   useEffect(() => {
     sessionRef.current = sessionId;
+  }, [sessionId]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(LAST_SESSION_STORAGE_KEY, sessionId);
+      window.dispatchEvent(
+        new CustomEvent("dinerDashSessionUpdated", {
+          detail: { sessionId },
+        }),
+      );
+    } catch {
+      // Ignore storage failures and keep gameplay unaffected.
+    }
   }, [sessionId]);
 
   useEffect(() => {
@@ -468,10 +499,15 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
   const measureArenaMetrics = useCallback(() => {
     const floorHeight = floorRef.current?.clientHeight ?? 0;
     const counterHeight = counterRef.current?.clientHeight ?? 0;
+    const entranceBottom = entranceRef.current
+      ? entranceRef.current.offsetTop + entranceRef.current.clientHeight
+      : 0;
     setArenaMetrics((prev) =>
-      prev.floorHeight === floorHeight && prev.counterHeight === counterHeight
+      prev.floorHeight === floorHeight &&
+      prev.counterHeight === counterHeight &&
+      prev.entranceBottom === entranceBottom
         ? prev
-        : { floorHeight, counterHeight },
+        : { floorHeight, counterHeight, entranceBottom },
     );
   }, []);
 
@@ -799,6 +835,9 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
         const customersAtEnd = customersRef.current;
         clearCustomerLeaveTimers();
         if (customersAtEnd.length > 0) {
+          window.setTimeout(() => {
+            playSfx("angryCustomerLeave", { volume: 0.95 });
+          }, 140);
           applyServeOutcome(0, -5 * customersAtEnd.length);
           setOrdersExpired((count) => count + customersAtEnd.length);
           void markLevelOneTutorialMessage(
@@ -1203,7 +1242,7 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
           "🔴 A bit slow. Try to serve faster next time! (+20 coins, +1 reputation)";
       }
 
-      await emitGameEvent({
+      void emitGameEvent({
         eventName: "order_served",
         sessionId,
         level,
@@ -1224,20 +1263,22 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
 
       const completed = getPendingDishes(updatedCustomer).length === 0;
       if (!completed) {
-        setActiveCustomers((prev) =>
-          prev.map((item) => (item.orderId === customer.orderId ? updatedCustomer : item)),
+        customersRef.current = customersRef.current.map((item) =>
+          item.orderId === customer.orderId ? updatedCustomer : item,
         );
+        setActiveCustomers(customersRef.current);
         setFeedback(tutorialServeMessage ?? "Partial order complete. Serve the remaining dish.");
         return;
       }
 
       setOrdersServed((count) => count + 1);
-      setActiveCustomers((prev) =>
-        prev.map((item) => (item.orderId === customer.orderId ? updatedCustomer : item)),
+      customersRef.current = customersRef.current.map((item) =>
+        item.orderId === customer.orderId ? updatedCustomer : item,
       );
+      setActiveCustomers(customersRef.current);
       setFeedback(tutorialServeMessage ?? "Order completed.");
 
-      await emitGameEvent({
+      void emitGameEvent({
         eventName: "order_completed",
         sessionId,
         level,
@@ -1250,9 +1291,10 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
       });
 
       const leaveTimerId = window.setTimeout(() => {
-        setActiveCustomers((prev) =>
-          prev.filter((item) => item.orderId !== updatedCustomer.orderId),
+        customersRef.current = customersRef.current.filter(
+          (item) => item.orderId !== updatedCustomer.orderId,
         );
+        setActiveCustomers(customersRef.current);
         void emitGameEvent({
           eventName: "customer_left",
           sessionId,
@@ -1382,18 +1424,22 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
     () => (selectedPlateSlot === null ? null : (plateSlots[selectedPlateSlot]?.dish ?? null)),
     [plateSlots, selectedPlateSlot],
   );
+  const analyticsHref = useMemo(() => `/dashboard?session=${sessionId}`, [sessionId]);
   const tableCenterBounds = useMemo(() => {
     if (arenaMetrics.floorHeight <= 0) {
       return null;
     }
 
-    const minY = TABLE_HALF_HEIGHT_PX + 8;
+    const minY = Math.max(
+      TABLE_HALF_HEIGHT_PX + 8,
+      arenaMetrics.entranceBottom + TABLE_HALF_HEIGHT_PX + TABLE_TOP_SAFE_PADDING_PX,
+    );
     const maxY = Math.max(
       minY,
       arenaMetrics.floorHeight - arenaMetrics.counterHeight - TABLE_HALF_HEIGHT_PX - 8,
     );
     return { minY, maxY };
-  }, [arenaMetrics.counterHeight, arenaMetrics.floorHeight]);
+  }, [arenaMetrics.counterHeight, arenaMetrics.entranceBottom, arenaMetrics.floorHeight]);
 
   return (
     <motion.section
@@ -1417,7 +1463,7 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
             fill
             className="scale-[1.02] object-cover object-center opacity-90"
           />
-          <div className="absolute left-2 top-2 z-20 h-36 w-36">
+          <div ref={entranceRef} className="absolute left-1/2 top-2 z-20 h-36 w-36 -translate-x-1/2">
             <Image src={ENTRANCE_DOOR} alt="Entrance" fill className="object-contain" />
           </div>
 
@@ -1590,13 +1636,16 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
               if (!target) {
                 return null;
               }
-              const tableSpriteYOffsetPx =
-                ((TABLE_SPRITE_TOP_PERCENT - 50) / 100) * TABLE_HEIGHT_PX;
-              const tableSpriteYOffsetPercent =
+              const tableSpriteYOffsetPx = ((TABLE_SPRITE_TOP_PERCENT - 50) / 100) * TABLE_HEIGHT_PX;
+              const tableCenterYPx =
+                tableCenterBounds && arenaMetrics.floorHeight > 0
+                  ? tableCenterBounds.minY +
+                    (target.yPercent / 100) * (tableCenterBounds.maxY - tableCenterBounds.minY)
+                  : (target.yPercent / 100) * Math.max(arenaMetrics.floorHeight, 1);
+              const targetYPercent =
                 arenaMetrics.floorHeight > 0
-                  ? (tableSpriteYOffsetPx / arenaMetrics.floorHeight) * 100
-                  : 0;
-              const targetYPercent = clamp(target.yPercent + tableSpriteYOffsetPercent, 0, 100);
+                  ? clamp(((tableCenterYPx + tableSpriteYOffsetPx) / arenaMetrics.floorHeight) * 100, 0, 100)
+                  : clamp(target.yPercent, 0, 100);
               const progressRaw =
                 1 -
                 Math.max(0, customer.walkArriveAt - clockMs) /
@@ -1652,7 +1701,7 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
                 "linear-gradient(rgba(70,37,23,0.72), rgba(70,37,23,0.72)), repeating-linear-gradient(90deg, #8a512f 0 16px, #744327 16px 32px)",
             }}
           >
-            <div className="grid grid-cols-5 gap-2">
+            <div className="grid grid-cols-5 gap-1">
               {DISHES.map((dish) => {
                 const cooldownUntil = counterCooldowns[dish] ?? 0;
                 const isReady = cooldownUntil <= clockMs;
@@ -1846,7 +1895,7 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
                     {level < maxLevel ? "Play Next Level" : "Replay Expert Level"}
                   </button>
                   <Link
-                    href="/dashboard"
+                    href={analyticsHref}
                     className="btn-secondary border-[color:var(--turquoise)]"
                     onClick={() => playSfx("menuTouch", { volume: 0.7 })}
                   >
@@ -1866,7 +1915,7 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
                     Start New Shift
                   </button>
                   <Link
-                    href="/dashboard"
+                    href={analyticsHref}
                     className="btn-secondary border-[color:var(--turquoise)]"
                     onClick={() => playSfx("menuTouch", { volume: 0.7 })}
                   >
