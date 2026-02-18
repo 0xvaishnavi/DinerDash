@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { gameEventSchema } from "@/lib/events/schema";
+import { insertGameEvent } from "@/lib/snowflake/insert";
 
 export async function POST(request: Request) {
   try {
@@ -18,9 +19,17 @@ export async function POST(request: Request) {
       );
     }
 
-    // Kafka publish hook will be added in the next implementation phase.
     if (process.env.NODE_ENV !== "production") {
       console.info("[event]", parsed.data.event_name, parsed.data.event_id);
+    }
+
+    // Insert event into Snowflake
+    try {
+      await insertGameEvent(parsed.data);
+    } catch (sfErr) {
+      console.error("[snowflake] insert failed:", sfErr);
+      // Return success to the client but log the Snowflake error.
+      // Game events should not fail due to analytics pipeline issues.
     }
 
     return NextResponse.json({ ok: true });

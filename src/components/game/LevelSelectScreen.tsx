@@ -226,11 +226,11 @@ export function LevelSelectScreen({ bestScores, onSelectLevel }: LevelSelectScre
       </div>
 
       {SHOW_LEVEL_INTRO_MODAL && introStory && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-amber-950/35 px-4">
+        <div className="fixed inset-0 z-[120] flex items-end justify-center overflow-y-auto bg-amber-950/35 px-4 py-4 sm:items-center sm:py-6">
           <motion.div
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            className="panel relative w-full max-w-3xl overflow-hidden border-[color:var(--maroon)] p-5 md:p-6"
+            className="panel relative max-h-[90vh] w-full max-w-3xl overflow-y-auto border-[color:var(--maroon)] p-4 sm:p-5 md:p-6"
           >
             <motion.span
               className="pointer-events-none absolute -left-24 -top-24 h-64 w-64 rounded-full bg-[radial-gradient(circle,rgba(212,80,10,0.24),rgba(212,80,10,0))]"
@@ -243,19 +243,19 @@ export function LevelSelectScreen({ bestScores, onSelectLevel }: LevelSelectScre
               transition={{ duration: 6.4, repeat: Infinity, ease: "easeInOut" }}
             />
 
-            <div className="relative grid gap-4 md:grid-cols-[1fr_190px] md:items-center">
+            <div className="relative grid gap-4 md:grid-cols-[minmax(0,1fr)_190px] md:items-center">
               <div>
                 <p className="text-xs uppercase tracking-[0.16em] text-amber-950/70">
                   Level {introStory.id}
                 </p>
-                <h3 className="mt-1 font-[var(--font-baloo)] text-3xl text-amber-950">
+                <h3 className="mt-1 font-[var(--font-baloo)] text-2xl text-amber-950 sm:text-3xl">
                   {introStory.subtitle}
                 </h3>
                 <p className="mt-3 text-sm leading-relaxed text-amber-950/90">{introStory.storyText}</p>
                 <p className="mt-3 text-sm leading-relaxed text-amber-950/80">
                   {introStory.levelDescription}
                 </p>
-                <div className="mt-5 flex items-center justify-end gap-2">
+                <div className="mt-5 flex flex-wrap items-center justify-end gap-2">
                   <button
                     type="button"
                     className="btn-secondary"

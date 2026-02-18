@@ -229,7 +229,7 @@ export function DetailedDashboard() {
             Dashboard 1
           </p>
           <h2 className="font-[var(--font-baloo)] text-2xl">Real-Time Order Funnel</h2>
-          <div className="mt-3 h-[300px]">
+          <div className="mt-3 h-[220px] sm:h-[260px] lg:h-[300px]">
             <Bar data={funnelData} options={chartOptions} />
           </div>
         </article>
@@ -239,7 +239,7 @@ export function DetailedDashboard() {
             Dashboard 2
           </p>
           <h2 className="font-[var(--font-baloo)] text-2xl">Speed Tier Distribution</h2>
-          <div className="mt-3 h-[300px]">
+          <div className="mt-3 h-[220px] sm:h-[260px] lg:h-[300px]">
             <Bar
               data={speedTierData}
               options={{
@@ -261,7 +261,7 @@ export function DetailedDashboard() {
             Dashboard 3
           </p>
           <h2 className="font-[var(--font-baloo)] text-2xl">Customer Satisfaction Trend</h2>
-          <div className="mt-3 h-[300px]">
+          <div className="mt-3 h-[220px] sm:h-[260px] lg:h-[300px]">
             <Line data={satisfactionData} options={chartOptions} />
           </div>
         </article>
@@ -271,7 +271,7 @@ export function DetailedDashboard() {
             Dashboard 4
           </p>
           <h2 className="font-[var(--font-baloo)] text-2xl">Revenue Per Dish</h2>
-          <div className="mt-3 h-[300px]">
+          <div className="mt-3 h-[220px] sm:h-[260px] lg:h-[300px]">
             <Bar data={revenueDishData} options={chartOptions} />
           </div>
         </article>
@@ -282,7 +282,7 @@ export function DetailedDashboard() {
           Dashboard 5
         </p>
         <h2 className="font-[var(--font-baloo)] text-2xl">Table Utilization Over Time</h2>
-        <div className="mt-3 h-[300px]">
+        <div className="mt-3 h-[220px] sm:h-[260px] lg:h-[300px]">
           <Line data={utilizationData} options={chartOptions} />
         </div>
       </article>
@@ -296,7 +296,7 @@ export function DetailedDashboard() {
           <p className="mt-1 text-sm text-amber-950/80">
             Completed vs expired orders across the round timeline.
           </p>
-          <div className="mt-3 h-[300px]">
+          <div className="mt-3 h-[220px] sm:h-[260px] lg:h-[300px]">
             <Line data={throughputData} options={chartOptions} />
           </div>
         </article>
@@ -309,7 +309,7 @@ export function DetailedDashboard() {
           <p className="mt-1 text-sm text-amber-950/80">
             Fast way to spot menu items with high drop-off risk.
           </p>
-          <div className="mt-3 h-[300px]">
+          <div className="mt-3 h-[220px] sm:h-[260px] lg:h-[300px]">
             <Bar data={dishDemandVsServedData} options={chartOptions} />
           </div>
         </article>

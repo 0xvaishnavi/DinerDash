@@ -14,8 +14,8 @@ const STEPS = [
 
 export default function InfoPage() {
   return (
-    <main className="mx-auto flex min-h-screen w-full flex-col items-center px-[5vw] py-4">
-      <section className="relative w-full max-w-[1200px] overflow-hidden rounded-[30px] bg-[linear-gradient(150deg,rgba(255,244,228,0.96)_0%,rgba(255,223,196,0.92)_48%,rgba(255,240,219,0.96)_100%)] p-5 shadow-[0_18px_34px_rgba(110,66,24,0.24)] md:p-8">
+    <main className="mx-auto flex min-h-screen w-full flex-col items-center px-[5vw] py-3 sm:py-4">
+      <section className="relative w-full max-w-[1200px] overflow-hidden rounded-[26px] bg-[linear-gradient(150deg,rgba(255,244,228,0.96)_0%,rgba(255,223,196,0.92)_48%,rgba(255,240,219,0.96)_100%)] p-4 shadow-[0_18px_34px_rgba(110,66,24,0.24)] sm:rounded-[30px] sm:p-5 md:p-8">
         <span className="pointer-events-none absolute -left-10 top-6 h-32 w-32 rounded-full bg-[color:var(--gold)]/20 blur-2xl" />
         <span className="pointer-events-none absolute -right-8 bottom-4 h-36 w-36 rounded-full bg-[color:var(--turquoise)]/18 blur-2xl" />
 
@@ -23,7 +23,7 @@ export default function InfoPage() {
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-900/70">
             Player Guide
           </p>
-          <h1 className="mt-1 font-[var(--font-baloo)] text-4xl text-amber-950 md:text-5xl">
+          <h1 className="mt-1 font-[var(--font-baloo)] text-3xl text-amber-950 sm:text-4xl md:text-5xl">
             How To Play
           </h1>
           <p className="mx-auto mt-2 max-w-2xl text-sm text-amber-950/80 md:text-base">

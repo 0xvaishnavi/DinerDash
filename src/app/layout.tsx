@@ -36,7 +36,7 @@ export default function RootLayout({
       <body className={`${quicksand.variable} ${baloo.variable} antialiased`}>
         <div className="min-h-screen bg-[radial-gradient(circle_at_25%_20%,#ffe9c1_0%,transparent_35%),radial-gradient(circle_at_75%_10%,#ffd7b8_0%,transparent_30%),var(--background)]">
           <GlobalNavbar />
-          <div className="pt-36">{children}</div>
+          <div className="pt-24 sm:pt-28 md:pt-32">{children}</div>
         </div>
       </body>
     </html>

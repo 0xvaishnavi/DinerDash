@@ -99,7 +99,7 @@ export function HomeWithLoader() {
     <>
       {loading && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[linear-gradient(145deg,#fff4de_0%,#ffe6c9_45%,#f7e6cf_100%)] px-6">
-          <section className="panel w-full max-w-md border-[color:var(--maroon)] p-6 text-center">
+          <section className="panel w-full max-w-md border-[color:var(--maroon)] p-5 text-center sm:p-6">
             <Image
               src="/logo.png"
               alt="Diner Dash Logo"
@@ -122,7 +122,7 @@ export function HomeWithLoader() {
         </div>
       )}
 
-      <main className="mx-auto flex min-h-screen w-full flex-col gap-4 px-[5vw] py-4">
+      <main className="mx-auto flex min-h-screen w-full flex-col gap-3 px-[5vw] py-3 sm:gap-4 sm:py-4">
         {selectedLevel === null ? (
           <LevelSelectScreen bestScores={bestScores} onSelectLevel={handleSelectLevel} />
         ) : (

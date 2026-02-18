@@ -31,7 +31,7 @@ export function GlobalNavbar() {
 
   return (
     <>
-      <div className="fixed left-0 right-0 top-0 z-[140] px-[5vw] py-4">
+      <div className="fixed left-0 right-0 top-0 z-[140] px-[5vw] py-2 sm:py-3 md:py-4">
         <GameNavbar
           onGameClick={() => {
             if (pathname !== "/") {
@@ -49,12 +49,12 @@ export function GlobalNavbar() {
       </div>
 
       {quickPanelContent && (
-        <div className="fixed inset-0 z-[160] flex items-center justify-center bg-amber-950/35 px-4">
-          <section className="panel w-full max-w-xl border-[color:var(--maroon)] p-5">
-            <h3 className="font-[var(--font-baloo)] text-3xl text-amber-950">
+        <div className="fixed inset-0 z-[160] flex items-end justify-center overflow-y-auto bg-amber-950/35 px-4 py-4 sm:items-center sm:py-6">
+          <section className="panel max-h-[88vh] w-full max-w-xl overflow-y-auto border-[color:var(--maroon)] p-4 sm:p-5">
+            <h3 className="font-[var(--font-baloo)] text-2xl text-amber-950 sm:text-3xl">
               {quickPanelContent.title}
             </h3>
-            <p className="mt-2 text-sm text-amber-950/80">{quickPanelContent.body}</p>
+            <p className="mt-2 text-sm text-amber-950/80 sm:text-base">{quickPanelContent.body}</p>
             <div className="mt-4 flex justify-end">
               <button
                 type="button"

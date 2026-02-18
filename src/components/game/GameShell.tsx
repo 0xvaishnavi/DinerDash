@@ -1396,7 +1396,7 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
 
   return (
     <motion.section
-      className="grid items-start gap-4 xl:justify-center xl:grid-cols-[calc(85vh*9/16*1.5)_460px]"
+      className="grid items-start gap-3 lg:gap-4 xl:justify-center xl:grid-cols-[minmax(0,calc(85vh*9/16*1.5))_minmax(320px,460px)]"
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.26 }}
@@ -1404,7 +1404,7 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
       <div>
         <div
           ref={floorRef}
-          className="relative mx-auto h-[78vh] max-h-[85vh] w-auto aspect-[9/16] touch-none overflow-hidden rounded-2xl border border-amber-900/30 bg-amber-50 shadow-inner sm:h-[85vh] xl:mx-0 xl:w-full xl:aspect-auto"
+          className="relative mx-auto h-[70vh] max-h-[90vh] w-auto aspect-[9/16] touch-none overflow-hidden rounded-2xl border border-amber-900/30 bg-amber-50 shadow-inner sm:h-[78vh] md:h-[84vh] xl:mx-0 xl:h-[88vh] xl:w-full xl:aspect-auto"
           onPointerDown={onFloorPointerDown}
           onPointerMove={onFloorPointerMove}
           onPointerUp={onFloorPointerUpOrCancel}
@@ -1699,7 +1699,7 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
         </div>
       </div>
 
-      <aside className="space-y-3 xl:sticky xl:top-3">
+      <aside className="space-y-3 xl:sticky xl:top-24">
         <div className="panel border-[color:var(--saffron)] p-4">
           <p className="text-xs uppercase tracking-wide text-amber-950/65">Controls</p>
           <div className="mt-3 grid grid-cols-2 gap-2">
@@ -1778,20 +1778,20 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
       <AnimatePresence>
         {roundResult && (
           <motion.div
-            className="fixed inset-0 z-[160] flex items-center justify-center bg-amber-950/45 px-4"
+            className="fixed inset-0 z-[160] flex items-end justify-center overflow-y-auto bg-amber-950/45 px-4 py-4 sm:items-center sm:py-6"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             <motion.section
-              className="panel w-full max-w-lg border-[color:var(--gold)] bg-[linear-gradient(145deg,rgba(255,250,242,0.95),rgba(255,235,208,0.94))] p-6 text-center shadow-[0_24px_50px_rgba(55,32,15,0.36)]"
+              className="panel max-h-[88vh] w-full max-w-lg overflow-y-auto border-[color:var(--gold)] bg-[linear-gradient(145deg,rgba(255,250,242,0.95),rgba(255,235,208,0.94))] p-4 text-center shadow-[0_24px_50px_rgba(55,32,15,0.36)] sm:p-6"
               initial={{ opacity: 0, y: 16, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 12, scale: 0.98 }}
               transition={{ duration: 0.22, ease: "easeOut" }}
             >
               <p className="text-xs uppercase tracking-[0.18em] text-amber-950/70">Shift Closed</p>
-              <h3 className="mt-1 font-[var(--font-baloo)] text-4xl text-amber-950">
+              <h3 className="mt-1 font-[var(--font-baloo)] text-3xl text-amber-950 sm:text-4xl">
                 Service Summary
               </h3>
               <p className="mt-2 text-sm font-semibold text-amber-950">
