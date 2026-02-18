@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f8eedc;
+  --foreground: #2a190e;
+  --saffron: #d4500a;
+  --maroon: #800020;
+  --turquoise: #00a693;
+  --gold: #c8960c;
+  --surface: #fffaf2;
+  --stroke: #3f2917;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-quicksand);
+  --font-display: var(--font-baloo);
+}
+
+body {
+  min-height: 100vh;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-quicksand), sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+@layer components {
+  .panel {
+    @apply rounded-2xl border bg-white/90 shadow-sm backdrop-blur-sm;
+    border-color: color-mix(in srgb, var(--stroke) 30%, transparent);
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold transition;
+    background: var(--saffron);
+    color: #fffaf2;
+  }
+
+  .btn-primary:hover {
+    background: color-mix(in srgb, var(--saffron) 85%, black);
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-lg border px-4 py-2 text-sm font-semibold transition;
+    border-color: color-mix(in srgb, var(--stroke) 35%, transparent);
+    background: color-mix(in srgb, var(--surface) 90%, white);
+    color: var(--foreground);
+  }
+
+  .btn-secondary:hover {
+    background: #fff;
+  }
+}
