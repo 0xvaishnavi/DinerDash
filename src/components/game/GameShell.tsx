@@ -103,6 +103,7 @@ const CUSTOMER_BASE_OFFSET_PERCENT = 2;
 const CUSTOMER_Y_OFFSET_MULTIPLIER = 11;
 const CUSTOMER_TOP_PERCENT =
   TABLE_SPRITE_TOP_PERCENT - CUSTOMER_BASE_OFFSET_PERCENT * CUSTOMER_Y_OFFSET_MULTIPLIER;
+const ORDER_BUBBLE_TOP_PERCENT = -10;
 
 function getPendingDishes(customer: ActiveCustomer): DishName[] {
   const served = [...customer.dishesServed];
@@ -1529,7 +1530,10 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
                           <span className="text-2xl">😡</span>
                         </motion.div>
                       ) : (
-                        <div className="absolute left-1/2 top-0 w-[148px] -translate-x-1/2 rounded-md border border-amber-900/15 bg-white/95 px-2 py-1">
+                        <div
+                          className="absolute left-1/2 w-[148px] -translate-x-1/2 rounded-md border border-amber-900/15 bg-white/95 px-2 py-1"
+                          style={{ top: `${ORDER_BUBBLE_TOP_PERCENT}%` }}
+                        >
                           <div className="relative mb-1 h-2 w-full overflow-hidden rounded bg-amber-100">
                             <div
                               className={`h-2 rounded ${timerColor}`}

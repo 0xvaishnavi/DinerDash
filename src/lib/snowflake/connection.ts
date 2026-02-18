@@ -1,5 +1,5 @@
 import * as snowflake from "snowflake-sdk";
-import type { Binds, Connection } from "snowflake-sdk";
+import type { Connection, Statement } from "snowflake-sdk";
 
 snowflake.configure({ ocspFailOpen: true });
 
@@ -24,7 +24,7 @@ function getConnection(): Promise<Connection> {
 
 export async function executeQuery<T = Record<string, unknown>>(
   sql: string,
-  binds: Binds = [],
+  binds: unknown[] = [],
 ): Promise<T[]> {
   const connection = await getConnection();
 
@@ -32,7 +32,7 @@ export async function executeQuery<T = Record<string, unknown>>(
     connection.execute({
       sqlText: sql,
       binds,
-      complete: (err, _stmt, rows) => {
+      complete: (err: Error | undefined, _stmt: Statement, rows: unknown[] | undefined) => {
         connection.destroy(() => {});
         if (err) reject(err);
         else resolve((rows ?? []) as T[]);

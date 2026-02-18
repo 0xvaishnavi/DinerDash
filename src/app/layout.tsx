@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Baloo_2, Quicksand } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 
 import { GlobalNavbar } from "@/components/game/GlobalNavbar";
 import "./globals.css";
@@ -38,6 +39,7 @@ export default function RootLayout({
           <GlobalNavbar />
           <div className="pt-24 sm:pt-28 md:pt-32">{children}</div>
         </div>
+        <Analytics />
       </body>
     </html>
   );

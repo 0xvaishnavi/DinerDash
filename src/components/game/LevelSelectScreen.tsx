@@ -226,11 +226,11 @@ export function LevelSelectScreen({ bestScores, onSelectLevel }: LevelSelectScre
       </div>
 
       {SHOW_LEVEL_INTRO_MODAL && introStory && (
-        <div className="fixed inset-0 z-[120] flex items-end justify-center overflow-y-auto bg-amber-950/35 px-4 py-4 sm:items-center sm:py-6">
+        <div className="fixed inset-0 z-[120] flex items-end justify-center overflow-x-hidden overflow-y-auto bg-amber-950/35 px-4 py-4 sm:items-center sm:py-6">
           <motion.div
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            className="panel relative max-h-[90vh] w-full max-w-3xl overflow-y-auto border-[color:var(--maroon)] p-4 sm:p-5 md:p-6"
+            className="panel relative max-h-[90vh] w-full max-w-3xl overflow-x-hidden overflow-y-auto border-[color:var(--maroon)] p-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:p-5 md:max-h-none md:overflow-hidden md:p-6"
           >
             <motion.span
               className="pointer-events-none absolute -left-24 -top-24 h-64 w-64 rounded-full bg-[radial-gradient(circle,rgba(212,80,10,0.24),rgba(212,80,10,0))]"

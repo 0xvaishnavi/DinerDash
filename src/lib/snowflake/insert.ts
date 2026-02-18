@@ -11,7 +11,7 @@ export async function insertGameEvent(event: GameEvent): Promise<void> {
       EVENT_NAME,
       PAYLOAD
     )
-    VALUES (?, ?, ?, ?, ?, PARSE_JSON(?))
+    SELECT ?, ?, ?, ?, ?, PARSE_JSON(?)
   `;
 
   const binds = [
