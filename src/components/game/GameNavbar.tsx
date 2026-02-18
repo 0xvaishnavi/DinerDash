@@ -117,8 +117,16 @@ export function GameNavbar({
       transition={{ duration: 0.4, ease: "easeOut" }}
     >
       <div className="relative flex items-center justify-between gap-3">
-        <motion.div
-          className="flex items-center gap-2 sm:gap-3"
+        <motion.button
+          type="button"
+          className="flex items-center gap-2 bg-transparent text-left sm:gap-3"
+          onClick={() => {
+            playSfx("menuTouch", { volume: 0.7 });
+            closeMobileMenu();
+            onGameClick();
+          }}
+          aria-label="Go to home"
+          title="Home"
           whileHover={{ y: -2, scale: 1.04 }}
           transition={{ type: "spring", stiffness: 340, damping: 22 }}
         >
@@ -126,7 +134,7 @@ export function GameNavbar({
           <span className="font-[var(--font-baloo)] text-2xl font-bold text-amber-950 sm:text-3xl">
             Diner Dash
           </span>
-        </motion.div>
+        </motion.button>
         <div className="hidden items-center gap-1 md:flex">
           <motion.div {...ICON_MOTION}>
             <Link

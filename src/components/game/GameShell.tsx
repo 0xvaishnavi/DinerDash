@@ -96,7 +96,7 @@ const COUNTER_RESPAWN_MS = 3000;
 const CUSTOMER_LEAVE_DELAY_MS = 500;
 const EXPIRED_CUSTOMER_FADE_MS = 1000;
 const CUSTOMER_WALK_DURATION_MS = 1200;
-const ENTRANCE_X_PERCENT = 50;
+const ENTRANCE_X_PERCENT = 90;
 const ENTRANCE_Y_PERCENT = 8;
 const TABLE_SPRITE_TOP_PERCENT = 58;
 const CUSTOMER_BASE_OFFSET_PERCENT = 2;
@@ -418,7 +418,7 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
 
       if (levelRef.current === 1 && !levelOneTutorialRef.current.firstOrderPlaced) {
         levelOneTutorialRef.current.firstOrderPlaced = true;
-        setFeedback("This customer wants Dosa! Click the Dosa button, then click the customer.");
+        setFeedback("First order placed. Match the dish bubble and serve fast!");
       }
     }, 120);
 
@@ -767,11 +767,7 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
     const orderId = `order-${uuidv4().slice(0, 8)}`;
     const customerType = pickCustomerType(levelRef.current);
     const spriteSet = pickCustomerSprite(customerType, current);
-    const isFirstLevelOneOrder =
-      levelRef.current === 1 && !levelOneTutorialRef.current.firstOrderPlaced;
-    const dishesRequested: DishName[] = isFirstLevelOneOrder
-      ? ["dosa"]
-      : pickOrderDishes(levelRef.current, current);
+    const dishesRequested: DishName[] = pickOrderDishes(levelRef.current, current);
 
     const customer: ActiveCustomer = {
       customerId,
@@ -1463,7 +1459,7 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
             fill
             className="scale-[1.02] object-cover object-center opacity-90"
           />
-          <div ref={entranceRef} className="absolute left-1/2 top-2 z-20 h-36 w-36 -translate-x-1/2">
+          <div ref={entranceRef} className="absolute right-2 top-2 z-20 h-36 w-36">
             <Image src={ENTRANCE_DOOR} alt="Entrance" fill className="object-contain" />
           </div>
 

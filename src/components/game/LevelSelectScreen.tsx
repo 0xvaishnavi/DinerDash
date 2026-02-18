@@ -245,14 +245,16 @@ export function LevelSelectScreen({ bestScores, onSelectLevel }: LevelSelectScre
 
             <div className="relative grid gap-4 md:grid-cols-[minmax(0,1fr)_190px] md:items-center">
               <div>
-                <p className="text-xs uppercase tracking-[0.16em] text-amber-950/70">
+                <p className="text-sm uppercase tracking-[0.16em] text-amber-950/70">
                   Level {introStory.id}
                 </p>
-                <h3 className="mt-1 font-[var(--font-baloo)] text-2xl text-amber-950 sm:text-3xl">
+                <h3 className="mt-1 font-[var(--font-baloo)] text-3xl text-amber-950 sm:text-4xl">
                   {introStory.subtitle}
                 </h3>
-                <p className="mt-3 text-sm leading-relaxed text-amber-950/90">{introStory.storyText}</p>
-                <p className="mt-3 text-sm leading-relaxed text-amber-950/80">
+                <p className="mt-3 text-base leading-relaxed text-amber-950/90 sm:text-lg">
+                  {introStory.storyText}
+                </p>
+                <p className="mt-3 text-base leading-relaxed text-amber-950/80 sm:text-lg">
                   {introStory.levelDescription}
                 </p>
                 <div className="mt-5 flex flex-wrap items-center justify-end gap-2">
