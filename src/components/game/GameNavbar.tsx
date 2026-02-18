@@ -64,7 +64,7 @@ export function GameNavbar({
 }: GameNavbarProps) {
   return (
     <motion.nav
-      className="relative w-full overflow-hidden rounded-[28px] border-0 bg-transparent px-4 py-3 shadow-none"
+      className="relative w-full overflow-hidden rounded-[28px] border-0 bg-[color:var(--background)] px-4 py-3 shadow-none"
       initial={{ opacity: 0, y: -14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}

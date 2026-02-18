@@ -35,7 +35,7 @@ export const CUSTOMER_SPRITES = {
 
 export const CUSTOMER_STANDING_SPRITES = {
   young: ["/sprite/female-customer-1-standing.png", "/sprite/female-customer-2-standing.png"],
-  traditional: ["/sprite/male-customer-1-standing.png", "/sprite/male-customer-1-standing.png"],
+  traditional: ["/sprite/male-customer-1-standing.png", "/sprite/male-customer-2-standing.png"],
 };
 
 export const WAITER_SPRITE = "/sprite/waiter.png";

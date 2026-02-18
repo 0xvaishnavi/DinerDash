@@ -98,7 +98,7 @@ export function HomeWithLoader() {
   return (
     <>
       {loading && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/5 backdrop-blur-[1px] px-6">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[linear-gradient(145deg,#fff4de_0%,#ffe6c9_45%,#f7e6cf_100%)] px-6">
           <section className="panel w-full max-w-md border-[color:var(--maroon)] p-6 text-center">
             <Image
               src="/logo.png"

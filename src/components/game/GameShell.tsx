@@ -87,7 +87,7 @@ const DEFAULT_LEVEL_ONE_TUTORIAL_FLAGS: LevelOneTutorialFlags = {
 const WAITER_SIZE = 121;
 const WAITER_HALF = WAITER_SIZE / 2;
 const CUSTOMER_SIZE_PX = 106;
-const TABLE_HEIGHT_PX = 208;
+const TABLE_HEIGHT_PX = 187;
 const TABLE_HALF_HEIGHT_PX = TABLE_HEIGHT_PX / 2;
 const WAITER_SPEED_PX_PER_SEC = 240;
 const SERVE_DISTANCE_PX = 145;
@@ -1416,7 +1416,7 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
             fill
             className="scale-[1.02] object-cover object-center opacity-90"
           />
-          <div className="absolute left-2 top-2 z-20 h-24 w-24">
+          <div className="absolute left-2 top-2 z-20 h-36 w-36">
             <Image src={ENTRANCE_DOOR} alt="Entrance" fill className="object-contain" />
           </div>
 
@@ -1469,7 +1469,7 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
                   }}
                   type="button"
                   onClick={() => void onServeTable(tableId)}
-                  className="absolute z-10 h-52 w-48 -translate-x-1/2 -translate-y-1/2 rounded-xl bg-transparent text-center transition hover:scale-[1.02] focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                  className="absolute z-10 h-[187px] w-[173px] -translate-x-1/2 -translate-y-1/2 rounded-xl bg-transparent text-center transition hover:scale-[1.02] focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
                   style={{
                     left: `${xPercent}%`,
                     top: tableTopPx === null ? `${yPercent}%` : `${tableTopPx}px`,
@@ -1477,7 +1477,7 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
                 >
                 <div className="relative h-full w-full">
                   <div
-                    className="absolute left-1/2 h-32 w-32 -translate-x-1/2 -translate-y-1/2"
+                    className="absolute left-1/2 h-[115px] w-[115px] -translate-x-1/2 -translate-y-1/2"
                     style={{ top: `${TABLE_SPRITE_TOP_PERCENT}%` }}
                   >
                     <Image
@@ -1586,6 +1586,13 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
               if (!target) {
                 return null;
               }
+              const tableSpriteYOffsetPx =
+                ((TABLE_SPRITE_TOP_PERCENT - 50) / 100) * TABLE_HEIGHT_PX;
+              const tableSpriteYOffsetPercent =
+                arenaMetrics.floorHeight > 0
+                  ? (tableSpriteYOffsetPx / arenaMetrics.floorHeight) * 100
+                  : 0;
+              const targetYPercent = clamp(target.yPercent + tableSpriteYOffsetPercent, 0, 100);
               const progressRaw =
                 1 -
                 Math.max(0, customer.walkArriveAt - clockMs) /
@@ -1594,7 +1601,7 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
               const xPercent =
                 ENTRANCE_X_PERCENT + (target.xPercent - ENTRANCE_X_PERCENT) * progress;
               const yPercent =
-                ENTRANCE_Y_PERCENT + (target.yPercent - ENTRANCE_Y_PERCENT) * progress;
+                ENTRANCE_Y_PERCENT + (targetYPercent - ENTRANCE_Y_PERCENT) * progress;
 
               return (
                 <div
