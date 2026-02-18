@@ -51,16 +51,11 @@ export function DetailedDashboard() {
   const [metrics, setMetrics] = useState<DashboardMetrics>(() =>
     createFallbackDashboardMetrics(sessionId),
   );
-  const [loading, setLoading] = useState(true);
-  const [warning, setWarning] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
 
     const load = async () => {
-      setLoading(true);
-      setWarning(null);
-
       try {
         const query = sessionId ? `?session_id=${encodeURIComponent(sessionId)}` : "";
         const response = await fetch(`/api/dashboard/metrics${query}`, {
@@ -75,23 +70,14 @@ export function DetailedDashboard() {
         const data = (await response.json()) as MetricsResponse;
         if (response.ok && data.ok && data.metrics) {
           setMetrics(data.metrics);
-          if (data.warning) {
-            setWarning(data.warning);
-          }
         } else {
-          setWarning(data.error ?? "dashboard_data_unavailable");
           setMetrics(createFallbackDashboardMetrics(sessionId));
         }
       } catch {
         if (!active) {
           return;
         }
-        setWarning("dashboard_fetch_failed");
         setMetrics(createFallbackDashboardMetrics(sessionId));
-      } finally {
-        if (active) {
-          setLoading(false);
-        }
       }
     };
 
@@ -293,61 +279,9 @@ export function DetailedDashboard() {
     ],
     [metrics.kpis],
   );
-  const validationTopCounts = useMemo(
-    () =>
-      Object.entries(metrics.validation.eventCounts)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 6),
-    [metrics.validation.eventCounts],
-  );
-
   return (
     <section className="space-y-4">
-      <article className="panel border-[color:var(--turquoise)] p-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-xs uppercase tracking-[0.16em] text-[color:var(--turquoise)]">
-            Analytics Source
-          </p>
-          <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-950">
-            {loading
-              ? "Loading..."
-              : metrics.source === "snowflake"
-                ? "Live Snowflake"
-                : "Fallback Sample"}
-          </span>
-        </div>
-        <p className="mt-2 text-sm text-amber-950/85">
-          Session: {metrics.sessionId ?? "All sessions"} | Events: {metrics.validation.totalEvents} |
-          Event types: {metrics.validation.distinctEventTypes}
-        </p>
-        <p className="mt-1 text-xs text-amber-950/70">
-          Last event: {metrics.validation.lastEventAt ?? "N/A"}
-        </p>
-        {warning ? (
-          <p className="mt-1 text-xs text-rose-700">Warning: {warning}</p>
-        ) : null}
-        {metrics.validation.missingEventTypes.length > 0 ? (
-          <p className="mt-1 text-xs text-amber-900/80">
-            Missing event types for this filter: {metrics.validation.missingEventTypes.join(", ")}
-          </p>
-        ) : (
-          <p className="mt-1 text-xs text-emerald-700">All expected event types observed.</p>
-        )}
-        {validationTopCounts.length > 0 ? (
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {validationTopCounts.map(([eventName, count]) => (
-              <span
-                key={eventName}
-                className="rounded-full bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-900"
-              >
-                {eventName}: {count}
-              </span>
-            ))}
-          </div>
-        ) : null}
-      </article>
-
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-[15px] sm:grid-cols-2 xl:grid-cols-3">
         {kpiCards.map((card, idx) => (
           <motion.article
             key={card.label}
@@ -369,7 +303,7 @@ export function DetailedDashboard() {
         ))}
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid gap-[15px] xl:grid-cols-2">
         <article className="panel border-[color:var(--turquoise)] p-4">
           <p className="text-xs uppercase tracking-[0.16em] text-[color:var(--turquoise)]">
             Dashboard 1
@@ -401,7 +335,7 @@ export function DetailedDashboard() {
         </article>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid gap-[15px] xl:grid-cols-2">
         <article className="panel border-[color:var(--maroon)] p-4">
           <p className="text-xs uppercase tracking-[0.16em] text-[color:var(--maroon)]">
             Dashboard 3
@@ -433,7 +367,7 @@ export function DetailedDashboard() {
         </div>
       </article>
 
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid gap-[15px] xl:grid-cols-2">
         <article className="panel border-[color:var(--saffron)] p-4">
           <p className="text-xs uppercase tracking-[0.16em] text-[color:var(--saffron)]">
             Dashboard 6

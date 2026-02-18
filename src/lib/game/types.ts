@@ -26,6 +26,7 @@ export interface LevelConfig {
   label: string;
   seats: number;
   plateCapacity: number;
+  roundDurationSeconds: number;
   spawnIntervalMs: number;
   minScore: number;
   bestScoreTarget: number;

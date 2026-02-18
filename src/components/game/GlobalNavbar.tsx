@@ -31,7 +31,7 @@ export function GlobalNavbar() {
 
   return (
     <>
-      <div className="fixed left-0 right-0 top-0 z-[140] px-[5vw] py-2 sm:py-3 md:py-4">
+      <div className="fixed left-0 right-0 top-0 z-[140] px-[5%] py-2 sm:py-3 md:py-4">
         <GameNavbar
           onGameClick={() => {
             if (pathname !== "/") {

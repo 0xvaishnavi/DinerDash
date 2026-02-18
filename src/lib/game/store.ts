@@ -6,7 +6,6 @@ import { create } from "zustand";
 import {
   MAX_REPUTATION,
   MIN_REPUTATION,
-  ROUND_DURATION_SECONDS,
   getLevelConfig,
 } from "@/lib/game/config";
 import type { DishName, PlateSlot } from "@/lib/game/types";
@@ -44,7 +43,7 @@ function clampReputation(value: number): number {
 export const useGameStore = create<GameStore>((set, get) => ({
   sessionId: uuidv4(),
   level: 1,
-  roundSecondsLeft: ROUND_DURATION_SECONDS,
+  roundSecondsLeft: getLevelConfig(1).roundDurationSeconds,
   revenue: 0,
   reputation: 50,
   plateSlots: makePlateSlots(getLevelConfig(1).plateCapacity),
@@ -58,7 +57,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         level,
         revenue: 0,
         reputation: 50,
-        roundSecondsLeft: ROUND_DURATION_SECONDS,
+        roundSecondsLeft: cfg.roundDurationSeconds,
         plateSlots: makePlateSlots(cfg.plateCapacity),
         selectedPlateSlot: null,
       };
@@ -69,7 +68,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const cfg = getLevelConfig(state.level);
 
       return {
-        roundSecondsLeft: ROUND_DURATION_SECONDS,
+        roundSecondsLeft: cfg.roundDurationSeconds,
         revenue: 0,
         reputation: 50,
         plateSlots: makePlateSlots(cfg.plateCapacity),
@@ -151,7 +150,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   resetSession: () =>
     set((state) => ({
       sessionId: uuidv4(),
-      roundSecondsLeft: ROUND_DURATION_SECONDS,
+      roundSecondsLeft: getLevelConfig(state.level).roundDurationSeconds,
       revenue: 0,
       reputation: 50,
       plateSlots: makePlateSlots(getLevelConfig(state.level).plateCapacity),

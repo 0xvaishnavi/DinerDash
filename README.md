@@ -5,31 +5,26 @@
 <h1 align="center">Diner Dash: India Edition</h1>
 
 <p align="center">
-  <strong>Snowflake Buildathon 2026 Submission</strong><br/>
-  Path 2 · Event-Driven Game + Real-Time Analytics
-</p>
-
-<p align="center">
   A fast-paced Indian restaurant simulation where every gameplay action emits structured events and powers live operational analytics.
 </p>
 
-## Submission Links
-
-| Item | Link |
-|---|---|
-| GitHub Repository | [https://github.com/0xvaishnavi/DinerDash](https://github.com/0xvaishnavi/DinerDash) |
-| Live Demo | [Add live demo URL](https://example.com) |
-| Preview / Demo Video | [Add Loom/YouTube URL](https://example.com) |
+<p align="center">
+  <a href="https://github.com/0xvaishnavi/DinerDash">GitHub</a> &nbsp;&middot;&nbsp;
+  <a href="https://example.com">Live Demo</a> &nbsp;&middot;&nbsp;
+  <a href="https://example.com">Demo Video</a>
+</p>
 
 
-## Preview
+## 🖼 Preview
 
 | | |
 |:-:|:-:|
 | ![](public/output/loader.png) | ![](public/output/levels.png) |
-| ![](public/output/level1.png) | ![](public/output/orders.png) |
+| ![](public/output/rules.png) | ![](public/output/level1.png) |
+| ![](public/output/orders.png) | ![](public/output/dashboard.png) |
+| ![](public/output/dashboard-1.png) | ![](public/output/dashboard-2.png) |
 
-## Theme and Game Idea
+## 🎨 Theme and Game Idea
 
 **Theme:** Indian cafe, chibi art style, culturally rooted dishes, warm colors (saffron/maroon/turquoise/gold).  
 **Core Idea:** Model restaurant operations as a real-time business system.
@@ -44,14 +39,14 @@ In analytics terms:
 - Pipelines aggregate behavior into business KPIs.
 - Dashboard tells a real ops story: funnel drop-off, SLA speed bands, utilization, satisfaction, and dish profitability.
 
-## Why This Is Buildathon-Centric
+## 🏆 Why This Is Buildathon-Centric
 
 - Real business mapping: restaurant flow mirrors delivery/e-commerce operations.
 - Event-first design: 12 event types across the full game lifecycle.
 - End-to-end analytics: browser events -> ingestion -> Snowflake queries -> live charts.
 - Session-aware analysis: dashboard can isolate a single gameplay session.
 
-## Gameplay Mechanics (Current)
+## 🎮 Gameplay Mechanics
 
 ### Time and Rounds
 - Round duration: **70 seconds**
@@ -75,7 +70,7 @@ In analytics terms:
 | 3 (Advanced) | 6 | 3 | 4s | 5210 |
 | 4 (Expert) | 8 | 3 | 2.5s | 8660 |
 
-## Architecture
+## 🏗 Architecture
 
 <p align="center">
   <img src="public/output/architecture.png" alt="Architecture Diagram" width="800" />
@@ -88,7 +83,7 @@ In analytics terms:
 - Dashboard metrics API: `src/app/api/dashboard/metrics/route.ts`
 - Dashboard UI: `src/components/dashboard/DetailedDashboard.tsx`
 
-## Dashboard Views
+## 📊 Dashboard Views
 
 - Real-Time Order Funnel
 - Speed Tier Distribution
@@ -105,29 +100,25 @@ Additional validation panel includes:
 - last event timestamp
 - top event counts
 
-## Tech Stack
+## 🛠 Tech Stack
 
-### Frontend
-- Next.js 16 (App Router)
-- React 19 + TypeScript
-- Tailwind CSS v4
-- Framer Motion
-- Zustand
-- Chart.js + react-chartjs-2
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 16 (App Router) |
+| UI | React 19 + TypeScript |
+| Styling | Tailwind CSS v4 |
+| Animation | Framer Motion |
+| State | Zustand |
+| Charts | Chart.js + react-chartjs-2 |
+| API | Next.js API Routes |
+| Validation | Zod |
+| Streaming | KafkaJS |
+| Data Warehouse | Snowflake SDK |
+| Linting | ESLint + Prettier |
+| Type Safety | TypeScript (strict) |
+| Testing | Vitest + Playwright |
 
-### Data / Backend
-- Next.js API Routes
-- Zod schema validation
-- Kafka-ready producer dependencies (`kafkajs`)
-- Snowflake SDK integration
-
-### Quality
-- ESLint
-- TypeScript strict checks
-- Vitest + Testing Library
-- Playwright (E2E scaffold)
-
-## Project Structure
+## 📁 Project Structure
 
 ```text
 src/
@@ -146,7 +137,7 @@ src/
     snowflake/
 ```
 
-## Local Setup
+## 🚀 Local Setup
 
 ### Prerequisites
 - Node.js 20+
@@ -162,7 +153,7 @@ npm run dev
 
 Open: [http://localhost:3000](http://localhost:3000)
 
-## Environment Variables
+## 🔐 Environment Variables
 
 From `.env.example`:
 
@@ -182,7 +173,7 @@ SNOWFLAKE_WAREHOUSE=COMPUTE_WH
 SNOWFLAKE_ROLE=ACCOUNTADMIN
 ```
 
-## Useful Scripts
+## 📜 Useful Scripts
 
 ```bash
 npm run dev
@@ -193,16 +184,3 @@ npm run typecheck
 npm run test
 npm run test:e2e
 ```
-
-## Buildathon Submission Checklist
-
-- Public GitHub repo with clear README
-- Live playable link
-- Demo video (2-5 mins)
-- Architecture + event flow explanation
-- Analytics screenshots with real data
-- KPI mapping narrative (game event -> business metric)
-
-## License and Attribution
-
-Add your final open-source license before submission (recommended: Apache-2.0 or MIT) and include any required asset/source attributions.

@@ -22,8 +22,8 @@ describe("scoring", () => {
   });
 
   it("computes star rating from level thresholds", () => {
-    expect(getStarRating(1000, 1)).toBe(0);
-    expect(getStarRating(1300, 1)).toBe(1);
+    expect(getStarRating(700, 1)).toBe(0);
+    expect(getStarRating(800, 1)).toBe(1);
     expect(getStarRating(2415, 1)).toBe(2);
     expect(getStarRating(3220, 1)).toBe(3);
   });

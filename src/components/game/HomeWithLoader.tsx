@@ -122,7 +122,7 @@ export function HomeWithLoader() {
         </div>
       )}
 
-      <main className="mx-auto flex min-h-screen w-full flex-col gap-3 px-[5vw] py-3 sm:gap-4 sm:py-4">
+      <main className="mx-auto flex min-h-screen w-full flex-col gap-3 px-[5%] py-3 sm:gap-4 sm:py-4">
         {selectedLevel === null ? (
           <LevelSelectScreen bestScores={bestScores} onSelectLevel={handleSelectLevel} />
         ) : (

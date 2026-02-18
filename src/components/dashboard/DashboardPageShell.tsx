@@ -40,7 +40,7 @@ function DashboardPageContent() {
 
   if (loading) {
     return (
-      <main className="mx-auto flex min-h-screen w-full flex-col gap-3 px-[5vw] py-3 sm:gap-4 sm:py-4">
+      <main className="mx-auto flex min-h-screen w-full flex-col gap-3 px-[5%] py-3 sm:gap-4 sm:py-4">
         <section className="panel mx-auto w-full max-w-md border-[color:var(--maroon)] p-5 text-center sm:p-6">
           <Image
             src="/logo.png"
@@ -66,7 +66,7 @@ function DashboardPageContent() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full flex-col gap-3 px-[5vw] py-3 sm:gap-4 sm:py-4">
+    <main className="mx-auto flex min-h-screen w-full flex-col gap-3 px-[5%] py-3 sm:gap-4 sm:py-4">
       <section className="panel border-[color:var(--turquoise)] px-4 py-4 sm:px-5">
         <div>
           <h1 className="font-[var(--font-baloo)] text-3xl leading-tight text-amber-950 sm:text-4xl md:text-5xl">

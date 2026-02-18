@@ -90,10 +90,10 @@ export function isLevelUnlocked(level: number, bestScores: BestScores): boolean 
 
 export function getLevelUnlockText(level: number): string | null {
   if (level === 2) {
-    return "🔒 Unlock: 1,300 coins";
+    return "🔒 Unlock: 800 coins";
   }
   if (level === 3) {
-    return "🔒 Unlock: 3,220 coins";
+    return "🔒 Unlock: 1,400 coins";
   }
   if (level === 4) {
     return "🔒 Unlock: Complete Advanced";

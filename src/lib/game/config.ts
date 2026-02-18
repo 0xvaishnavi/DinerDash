@@ -1,7 +1,7 @@
 import type { LevelConfig, SpeedTier } from "./types";
 
-export const ROUND_DURATION_SECONDS = 70;
-export const ORDER_DURATION_SECONDS = 20;
+export const BASE_ROUND_DURATION_SECONDS = 60;
+export const ORDER_DURATION_SECONDS = 15;
 export const MAX_REPUTATION = 100;
 export const MIN_REPUTATION = 0;
 
@@ -11,8 +11,9 @@ export const LEVEL_CONFIGS: LevelConfig[] = [
     label: "Beginner",
     seats: 4,
     plateCapacity: 1,
+    roundDurationSeconds: 60,
     spawnIntervalMs: 8_000,
-    minScore: 1_300,
+    minScore: 800,
     bestScoreTarget: 3_220,
   },
   {
@@ -20,8 +21,9 @@ export const LEVEL_CONFIGS: LevelConfig[] = [
     label: "Intermediate",
     seats: 4,
     plateCapacity: 2,
+    roundDurationSeconds: 70,
     spawnIntervalMs: 6_000,
-    minScore: 2_720,
+    minScore: 1_400,
     bestScoreTarget: 6_120,
   },
   {
@@ -29,8 +31,9 @@ export const LEVEL_CONFIGS: LevelConfig[] = [
     label: "Advanced",
     seats: 6,
     plateCapacity: 3,
+    roundDurationSeconds: 80,
     spawnIntervalMs: 4_000,
-    minScore: 5_210,
+    minScore: 2_100,
     bestScoreTarget: 8_660,
   },
   {
@@ -38,8 +41,9 @@ export const LEVEL_CONFIGS: LevelConfig[] = [
     label: "Expert",
     seats: 8,
     plateCapacity: 3,
+    roundDurationSeconds: 90,
     spawnIntervalMs: 2_500,
-    minScore: 8_660,
+    minScore: 3_200,
     bestScoreTarget: 106_560,
   },
 ];
@@ -52,17 +56,17 @@ export const SCORE_RULES: Record<
 } = {
   green: {
     maxMs: 5_000,
-    coins: 200,
+    coins: 150,
     reputation: 10,
   },
   yellow: {
     maxMs: 10_000,
-    coins: 100,
+    coins: 80,
     reputation: 5,
   },
   red: {
     maxMs: Number.POSITIVE_INFINITY,
-    coins: 20,
+    coins: 30,
     reputation: 1,
   },
   miss: {
