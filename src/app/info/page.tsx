@@ -32,7 +32,7 @@ export default function InfoPage() {
         </div>
 
         <div className="relative mt-6 rounded-[26px] bg-white/70 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.92),0_10px_22px_rgba(119,77,30,0.16)] md:p-6">
-          <ol className="grid gap-3 md:grid-cols-2">
+          <ol className="grid gap-3">
             {STEPS.map((step, index) => (
               <li
                 key={step}

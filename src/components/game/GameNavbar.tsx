@@ -25,6 +25,9 @@ const ICON_MOTION = {
   transition: { duration: 0.28, ease: "easeOut" },
 } as const;
 
+const TOOLTIP_CLASS =
+  "pointer-events-none absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-amber-950/90 px-2 py-0.5 text-[10px] font-semibold text-amber-50 opacity-0 transition-opacity duration-200 group-hover:opacity-100";
+
 function IconButton({
   icon,
   label,
@@ -35,27 +38,30 @@ function IconButton({
   onClick: () => void;
 }) {
   return (
-    <motion.button
-      type="button"
-      title={label}
-      aria-label={label}
+    <div className="group relative">
+      <motion.button
+        type="button"
+        title={label}
+        aria-label={label}
       onClick={() => {
-        playSfx("menuTouch", { volume: 0.7 });
+        playSfx("clickButton", { volume: 0.7 });
         onClick();
       }}
-      className={NAV_ICON_CLASS}
-      {...ICON_MOTION}
-    >
-      <Image
-        src={icon}
-        alt=""
-        aria-hidden
-        width={56}
-        height={56}
-        className="drop-shadow-[0_6px_10px_rgba(63,41,23,0.32)]"
-      />
-      <span className="sr-only">{label}</span>
-    </motion.button>
+        className={NAV_ICON_CLASS}
+        {...ICON_MOTION}
+      >
+        <Image
+          src={icon}
+          alt=""
+          aria-hidden
+          width={56}
+          height={56}
+          className="drop-shadow-[0_6px_10px_rgba(63,41,23,0.32)]"
+        />
+        <span className="sr-only">{label}</span>
+      </motion.button>
+      <span className={TOOLTIP_CLASS}>{label}</span>
+    </div>
   );
 }
 
@@ -121,7 +127,7 @@ export function GameNavbar({
           type="button"
           className="flex items-center gap-2 bg-transparent text-left sm:gap-3"
           onClick={() => {
-            playSfx("menuTouch", { volume: 0.7 });
+            playSfx("clickButton", { volume: 0.7 });
             closeMobileMenu();
             onGameClick();
           }}
@@ -136,28 +142,31 @@ export function GameNavbar({
           </span>
         </motion.button>
         <div className="hidden items-center gap-1 md:flex">
-          <motion.div {...ICON_MOTION}>
-            <Link
-              href={dashboardHref}
-              title="Dashboard"
-              aria-label="Dashboard"
-              className={NAV_ICON_CLASS}
+          <div className="group relative">
+            <motion.div {...ICON_MOTION}>
+              <Link
+                href={dashboardHref}
+                title="Dashboard"
+                aria-label="Dashboard"
+                className={NAV_ICON_CLASS}
               onClick={() => {
-                playSfx("menuTouch", { volume: 0.7 });
+                playSfx("clickButton", { volume: 0.7 });
                 closeMobileMenu();
               }}
-            >
-              <Image
-                src="/icons/dashboard.png"
-                alt=""
-                aria-hidden
-                width={56}
-                height={56}
-                className="drop-shadow-[0_6px_10px_rgba(63,41,23,0.32)]"
-              />
-              <span className="sr-only">Dashboard</span>
-            </Link>
-          </motion.div>
+              >
+                <Image
+                  src="/icons/dashboard.png"
+                  alt=""
+                  aria-hidden
+                  width={56}
+                  height={56}
+                  className="drop-shadow-[0_6px_10px_rgba(63,41,23,0.32)]"
+                />
+                <span className="sr-only">Dashboard</span>
+              </Link>
+            </motion.div>
+            <span className={TOOLTIP_CLASS}>Dashboard</span>
+          </div>
           <IconButton
             icon="/icons/play.png"
             label="Game"
@@ -195,7 +204,7 @@ export function GameNavbar({
           type="button"
           className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-transparent text-amber-950 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-900/35 md:hidden"
           onClick={() => {
-            playSfx("menuTouch", { volume: 0.7 });
+            playSfx("clickButton", { volume: 0.7 });
             setMobileOpen((prev) => !prev);
           }}
           whileTap={{ scale: 0.92 }}
@@ -215,28 +224,31 @@ export function GameNavbar({
             exit={{ opacity: 0, y: -8, scale: 0.98 }}
             transition={{ duration: 0.16, ease: "easeOut" }}
           >
-            <motion.div {...ICON_MOTION}>
-              <Link
-                href={dashboardHref}
-                title="Dashboard"
-                aria-label="Dashboard"
-                className={NAV_ICON_CLASS}
+            <div className="group relative">
+              <motion.div {...ICON_MOTION}>
+                <Link
+                  href={dashboardHref}
+                  title="Dashboard"
+                  aria-label="Dashboard"
+                  className={NAV_ICON_CLASS}
                 onClick={() => {
-                  playSfx("menuTouch", { volume: 0.7 });
+                  playSfx("clickButton", { volume: 0.7 });
                   closeMobileMenu();
                 }}
-              >
-                <Image
-                  src="/icons/dashboard.png"
-                  alt=""
-                  aria-hidden
-                  width={54}
-                  height={54}
-                  className="drop-shadow-[0_6px_10px_rgba(63,41,23,0.32)]"
-                />
-                <span className="sr-only">Dashboard</span>
-              </Link>
-            </motion.div>
+                >
+                  <Image
+                    src="/icons/dashboard.png"
+                    alt=""
+                    aria-hidden
+                    width={54}
+                    height={54}
+                    className="drop-shadow-[0_6px_10px_rgba(63,41,23,0.32)]"
+                  />
+                  <span className="sr-only">Dashboard</span>
+                </Link>
+              </motion.div>
+              <span className={TOOLTIP_CLASS}>Dashboard</span>
+            </div>
             <IconButton
               icon="/icons/play.png"
               label="Game"

@@ -5,11 +5,13 @@ import Image from "next/image";
 
 import { GameShell } from "@/components/game/GameShell";
 import { LevelSelectScreen } from "@/components/game/LevelSelectScreen";
+import { OnboardingFlow } from "@/components/game/OnboardingFlow";
 import {
   DEFAULT_BEST_SCORES,
   type BestScores,
 } from "@/lib/game/level-content";
 import { useGameStore } from "@/lib/game/store";
+import { readOnboardingDone, readSessionProfile } from "@/lib/profile/session-profile";
 
 const LOADER_DURATION_MS = 2000;
 const LOADER_TICK_MS = 60;
@@ -18,10 +20,13 @@ const BEST_SCORES_STORAGE_KEY = "diner_dash_best_scores_v1";
 export function HomeWithLoader() {
   const setLevel = useGameStore((state) => state.setLevel);
   const resetSession = useGameStore((state) => state.resetSession);
+  const sessionId = useGameStore((state) => state.sessionId);
 
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
+  const [onboardingResolved, setOnboardingResolved] = useState(false);
+  const [onboardingComplete, setOnboardingComplete] = useState(false);
   const [bestScores, setBestScores] = useState<BestScores>(() => {
     if (typeof window === "undefined") {
       return DEFAULT_BEST_SCORES;
@@ -77,6 +82,13 @@ export function HomeWithLoader() {
   );
 
   useEffect(() => {
+    const hasProfile = !!readSessionProfile();
+    const isDone = readOnboardingDone();
+    setOnboardingComplete(Boolean(hasProfile && isDone));
+    setOnboardingResolved(true);
+  }, []);
+
+  useEffect(() => {
     const start = performance.now();
 
     const timer = window.setInterval(() => {
@@ -123,7 +135,14 @@ export function HomeWithLoader() {
       )}
 
       <main className="mx-auto flex min-h-screen w-full flex-col gap-3 px-[5%] py-3 sm:gap-4 sm:py-4">
-        {selectedLevel === null ? (
+        {!onboardingResolved ? null : selectedLevel === null && !onboardingComplete ? (
+          <OnboardingFlow
+            sessionId={sessionId}
+            onComplete={() => {
+              setOnboardingComplete(true);
+            }}
+          />
+        ) : selectedLevel === null ? (
           <LevelSelectScreen bestScores={bestScores} onSelectLevel={handleSelectLevel} />
         ) : (
           <>

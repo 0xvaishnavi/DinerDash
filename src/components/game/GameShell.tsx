@@ -8,6 +8,8 @@ import { v4 as uuidv4 } from "uuid";
 
 import { GameHud } from "@/components/game/GameHud";
 import { PlateSlots } from "@/components/game/PlateSlots";
+import { startBgm, stopBgm, syncBgmVolume } from "@/lib/audio/bgm";
+import { useAudioSettings } from "@/lib/audio/settings-store";
 import { playSfx } from "@/lib/audio/sfx";
 import { emitGameEvent } from "@/lib/events/emitter";
 import {
@@ -19,7 +21,6 @@ import {
   EMPTY_PLATE_ICON,
   FLOOR_BACKGROUND,
   GREEN_CHECK,
-  ENTRANCE_DOOR,
   SPEECH_BUBBLE,
   TABLE_SPRITE,
   WAITER_SPRITE,
@@ -89,7 +90,7 @@ const WAITER_HALF = WAITER_SIZE / 2;
 const CUSTOMER_SIZE_PX = 106;
 const TABLE_HEIGHT_PX = 187;
 const TABLE_HALF_HEIGHT_PX = TABLE_HEIGHT_PX / 2;
-const WAITER_SPEED_PX_PER_SEC = 240;
+const WAITER_SPEED_PX_PER_SEC = 277;
 const SERVE_DISTANCE_PX = 145;
 const COUNTER_PICK_DISTANCE_PX = 120;
 const COUNTER_RESPAWN_MS = 3000;
@@ -106,6 +107,7 @@ const CUSTOMER_TOP_PERCENT =
 const ORDER_BUBBLE_TOP_PERCENT = -11.5;
 const LAST_SESSION_STORAGE_KEY = "diner_dash_last_session_id";
 const TABLE_TOP_SAFE_PADDING_PX = 12;
+const ROUND_START_DELAY_MS = 3000;
 
 function getPendingDishes(customer: ActiveCustomer): DishName[] {
   const served = [...customer.dishesServed];
@@ -276,6 +278,7 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
   } = useGameStore();
 
   const [roundActive, setRoundActive] = useState(false);
+  const [roundStarting, setRoundStarting] = useState(false);
   const [activeCustomers, setActiveCustomers] = useState<ActiveCustomer[]>([]);
   const [ordersServed, setOrdersServed] = useState(0);
   const [ordersExpired, setOrdersExpired] = useState(0);
@@ -311,10 +314,27 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
   const dragPointerIdRef = useRef<number | null>(null);
   const coinBurstTimersRef = useRef<number[]>([]);
   const customerLeaveTimersRef = useRef<number[]>([]);
+  const roundStartDelayTimerRef = useRef<number | null>(null);
   const countdownStartedRef = useRef(false);
   const levelOneTutorialRef = useRef<LevelOneTutorialFlags>({
     ...DEFAULT_LEVEL_ONE_TUTORIAL_FLAGS,
   });
+
+  const bgmEnabled = useAudioSettings((s) => s.bgmEnabled);
+  const bgmVolume = useAudioSettings((s) => s.bgmVolume);
+
+  useEffect(() => {
+    if (roundActive) {
+      startBgm();
+    } else {
+      stopBgm();
+    }
+    return () => stopBgm();
+  }, [roundActive]);
+
+  useEffect(() => {
+    syncBgmVolume();
+  }, [bgmEnabled, bgmVolume]);
 
   useEffect(() => {
     customersRef.current = activeCustomers;
@@ -428,6 +448,10 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
 
   useEffect(() => {
     return () => {
+      if (roundStartDelayTimerRef.current !== null) {
+        window.clearTimeout(roundStartDelayTimerRef.current);
+        roundStartDelayTimerRef.current = null;
+      }
       for (const timerId of coinBurstTimersRef.current) {
         window.clearTimeout(timerId);
       }
@@ -1035,6 +1059,14 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
   };
 
   const onStartRound = async () => {
+    if (roundStarting) {
+      return;
+    }
+    if (roundStartDelayTimerRef.current !== null) {
+      window.clearTimeout(roundStartDelayTimerRef.current);
+      roundStartDelayTimerRef.current = null;
+    }
+
     clearCustomerLeaveTimers();
     levelOneTutorialRef.current = { ...DEFAULT_LEVEL_ONE_TUTORIAL_FLAGS };
     countdownStartedRef.current = false;
@@ -1046,8 +1078,10 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
     setOrdersExpired(0);
     setCounterCooldowns(createCounterCooldowns());
     setRoundStartAt(nowMs());
-    setFeedback("Round started. Seat guests and serve quickly.");
-    setRoundActive(true);
+    setRoundStarting(true);
+    setRoundActive(false);
+    setFeedback("Get ready... service starts in 3 seconds.");
+    playSfx("countdown5432", { volume: 0.95 });
 
     await emitGameEvent({
       eventName: "session_start",
@@ -1055,13 +1089,25 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
       level,
       payload: { player_id: "local-player" },
     });
+
+    roundStartDelayTimerRef.current = window.setTimeout(() => {
+      setRoundStarting(false);
+      setRoundActive(true);
+      setFeedback("Round started. Seat guests and serve quickly.");
+      roundStartDelayTimerRef.current = null;
+    }, ROUND_START_DELAY_MS);
   };
 
   const onPlayNextLevel = () => {
+    if (roundStartDelayTimerRef.current !== null) {
+      window.clearTimeout(roundStartDelayTimerRef.current);
+      roundStartDelayTimerRef.current = null;
+    }
     const nextLevel = Math.min(level + 1, maxLevel);
     clearCustomerLeaveTimers();
     countdownStartedRef.current = false;
     setRoundResult(null);
+    setRoundStarting(false);
     setRoundActive(false);
     setActiveCustomers([]);
     setOrdersServed(0);
@@ -1219,11 +1265,11 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
         outcome.speedTier === "green" &&
         markLevelOneTutorialMessage(
           "firstFastServe",
-          "🟢 Perfect! Fast service = More coins! (+200 coins, +10 reputation)",
+          "Perfect! Fast service = More coins and happy customers",
         )
       ) {
         tutorialServeMessage =
-          "🟢 Perfect! Fast service = More coins! (+200 coins, +10 reputation)";
+          "Perfect! Fast service = More coins and happy customers";
       } else if (
         outcome.speedTier === "red" &&
         markLevelOneTutorialMessage(
@@ -1748,12 +1794,13 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
             <button
               type="button"
               className="btn-primary"
+              disabled={roundStarting}
               onClick={() => {
                 playSfx("menuTouch", { volume: 0.7 });
                 void onStartRound();
               }}
             >
-              Start Round
+              {roundStarting ? "Starting..." : "Start Round"}
             </button>
             <button
               type="button"
@@ -1777,6 +1824,7 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
           roundSecondsLeft={roundSecondsLeft}
           revenue={revenue}
           reputation={reputation}
+          targetRevenue={currentLevelConfig.minScore}
           selectedDish={selectedDish}
         />
 

@@ -1,33 +1,36 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 import { GameNavbar } from "@/components/game/GameNavbar";
 import { playSfx } from "@/lib/audio/sfx";
+import { readSessionProfile } from "@/lib/profile/session-profile";
 
-type QuickPanel = "settings" | "profile" | null;
+type QuickPanel = "profile" | null;
 
 export function GlobalNavbar() {
   const router = useRouter();
   const pathname = usePathname();
   const [quickPanel, setQuickPanel] = useState<QuickPanel>(null);
+  const [username, setUsername] = useState<string | null>(null);
+
+  useEffect(() => {
+    const profile = readSessionProfile();
+    setUsername(profile?.username ?? null);
+  }, [pathname]);
 
   const quickPanelContent = useMemo(() => {
-    if (quickPanel === "settings") {
-      return {
-        title: "Settings",
-        body: "Settings panel is ready for controls, audio, and accessibility options.",
-      };
-    }
     if (quickPanel === "profile") {
       return {
         title: "Profile",
-        body: "Profile panel is ready for player stats, badges, and progress tracking.",
+        body: username
+          ? `Logged in as @${username}`
+          : "Start a new session from home to create your player profile.",
       };
     }
     return null;
-  }, [quickPanel]);
+  }, [quickPanel, username]);
 
   return (
     <>
@@ -43,7 +46,11 @@ export function GlobalNavbar() {
               router.push("/info");
             }
           }}
-          onSettingsClick={() => setQuickPanel("settings")}
+          onSettingsClick={() => {
+            if (pathname !== "/settings") {
+              router.push("/settings");
+            }
+          }}
           onProfileClick={() => setQuickPanel("profile")}
         />
       </div>
@@ -60,7 +67,7 @@ export function GlobalNavbar() {
                 type="button"
                 className="btn-secondary"
                 onClick={() => {
-                  playSfx("menuTouch", { volume: 0.7 });
+                  playSfx("clickButton", { volume: 0.7 });
                   setQuickPanel(null);
                 }}
               >

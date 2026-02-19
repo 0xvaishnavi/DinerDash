@@ -61,20 +61,14 @@ export function DetailedDashboard() {
   useEffect(() => {
     const normalizedQuerySessionId =
       querySessionId && UUID_PATTERN.test(querySessionId) ? querySessionId : null;
-
-    if (normalizedQuerySessionId) {
-      setSessionId(normalizedQuerySessionId);
-      setSessionResolved(true);
-      return;
-    }
-
     try {
       const storedSessionId = window.localStorage.getItem(LAST_SESSION_STORAGE_KEY);
       const normalizedStoredSessionId =
         storedSessionId && UUID_PATTERN.test(storedSessionId) ? storedSessionId : null;
-      setSessionId(normalizedStoredSessionId);
+      // Prefer the most recent local gameplay session so dashboard reflects latest run.
+      setSessionId(normalizedStoredSessionId ?? normalizedQuerySessionId);
     } catch {
-      setSessionId(null);
+      setSessionId(normalizedQuerySessionId);
     } finally {
       setSessionResolved(true);
     }

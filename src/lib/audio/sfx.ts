@@ -1,6 +1,9 @@
 "use client";
 
+import { useAudioSettings } from "@/lib/audio/settings-store";
+
 export type SfxName =
+  | "clickButton"
   | "coin"
   | "countdown5432"
   | "countdownComplete"
@@ -14,6 +17,7 @@ export type SfxName =
   | "angryCustomerLeave";
 
 const SFX_PATHS: Record<SfxName, string> = {
+  clickButton: "/sounds/click_button.mp3",
   coin: "/sounds/coin.mp3",
   countdown5432: "/sounds/countdown_5432.wav",
   countdownComplete: "/sounds/countdown_complete.mp3",
@@ -35,10 +39,13 @@ export function playSfx(
     return;
   }
 
+  const { sfxEnabled, sfxVolume } = useAudioSettings.getState();
+  if (!sfxEnabled) return;
+
   const src = SFX_PATHS[name];
   const audio = new Audio(src);
   audio.preload = "auto";
-  audio.volume = options?.volume ?? 1;
+  audio.volume = (options?.volume ?? 1) * sfxVolume;
   audio.playbackRate = options?.playbackRate ?? 1;
   void audio.play().catch(() => undefined);
 }
