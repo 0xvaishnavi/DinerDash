@@ -24,33 +24,15 @@
 | ![](public/output/orders.png) | ![](public/output/dashboard.png) |
 | ![](public/output/dashboard-1.png) | ![](public/output/dashboard-2.png) |
 
-## 🎨 Theme and Game Idea
+## 🎮 Game Idea
 
-**Theme:** Indian cafe, chibi art style, culturally rooted dishes, warm colors (saffron/maroon/turquoise/gold).  
-**Core Idea:** Model restaurant operations as a real-time business system.
-
-In gameplay terms:
-- Guests arrive and place dish requests.
-- The player manages movement, dish pickup, serving speed, and mistakes.
-- Revenue and reputation change in real time.
-
-In analytics terms:
-- Every action emits event data.
-- Pipelines aggregate behavior into business KPIs.
-- Dashboard tells a real ops story: funnel drop-off, SLA speed bands, utilization, satisfaction, and dish profitability.
-
-## 🏆 Why This Is Buildathon-Centric
-
-- Real business mapping: restaurant flow mirrors delivery/e-commerce operations.
-- Event-first design: 12 event types across the full game lifecycle.
-- End-to-end analytics: browser events -> ingestion -> Snowflake queries -> live charts.
-- Session-aware analysis: dashboard can isolate a single gameplay session.
-
-## 🎮 Gameplay Mechanics
-
-Customers walk in, sit at a table, and place orders. You pick up dishes, carry them over, and serve before patience runs out. The faster you serve, the more coins and reputation you earn — green-tier serves reward the most, while expired orders cost you reputation.
-
-Four levels scale the chaos: from 4 tables with a single plate in hand, all the way to 8 tables with rapid-fire arrivals and triple plate juggling.
+- Customers walk in, sit at a table, and place orders via speech bubbles.
+- Pick up dishes from the counter, carry them over, and serve before patience runs out.
+- Faster serves earn more coins and reputation — expired orders cost you reputation.
+- Four levels scale the chaos: from 4 tables with a single plate, up to 8 tables with rapid-fire arrivals and triple plate juggling.
+- Every gameplay action emits structured event data (12 event types across the full lifecycle).
+- Events flow through ingestion into Snowflake, powering a live analytics dashboard.
+- Dashboard covers funnel drop-off, SLA speed bands, table utilization, satisfaction, and dish profitability.
 
 ## 🏗 Architecture
 
