@@ -96,8 +96,8 @@ const COUNTER_RESPAWN_MS = 3000;
 const CUSTOMER_LEAVE_DELAY_MS = 500;
 const EXPIRED_CUSTOMER_FADE_MS = 1000;
 const CUSTOMER_WALK_DURATION_MS = 1200;
-const ENTRANCE_X_PERCENT = 90;
-const ENTRANCE_Y_PERCENT = 8;
+const ENTRANCE_X_PERCENT = 95;
+const ENTRANCE_Y_PERCENT = 6;
 const TABLE_SPRITE_TOP_PERCENT = 58;
 const CUSTOMER_BASE_OFFSET_PERCENT = 2;
 const CUSTOMER_Y_OFFSET_MULTIPLIER = 11;
@@ -303,7 +303,6 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
   const ordersExpiredRef = useRef(ordersExpired);
   const floorRef = useRef<HTMLDivElement | null>(null);
   const counterRef = useRef<HTMLDivElement | null>(null);
-  const entranceRef = useRef<HTMLDivElement | null>(null);
   const tableRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const counterDishRefs = useRef<Record<DishName, HTMLButtonElement | null>>(
     {} as Record<DishName, HTMLButtonElement | null>,
@@ -499,9 +498,7 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
   const measureArenaMetrics = useCallback(() => {
     const floorHeight = floorRef.current?.clientHeight ?? 0;
     const counterHeight = counterRef.current?.clientHeight ?? 0;
-    const entranceBottom = entranceRef.current
-      ? entranceRef.current.offsetTop + entranceRef.current.clientHeight
-      : 0;
+    const entranceBottom = 0;
     setArenaMetrics((prev) =>
       prev.floorHeight === floorHeight &&
       prev.counterHeight === counterHeight &&
@@ -1459,10 +1456,6 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
             fill
             className="scale-[1.02] object-cover object-center opacity-90"
           />
-          <div ref={entranceRef} className="absolute right-2 top-2 z-20 h-36 w-36">
-            <Image src={ENTRANCE_DOOR} alt="Entrance" fill className="object-contain" />
-          </div>
-
           <AnimatePresence initial={false}>
             {coinBursts.map((burst) => (
               <motion.div

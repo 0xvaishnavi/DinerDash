@@ -11,6 +11,9 @@
 !.yarn/versions
 .
 
+.prettierignore
+snowflake.log
+
 
 # testing
 /coverage

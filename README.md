@@ -48,40 +48,15 @@ In analytics terms:
 
 ## 🎮 Gameplay Mechanics
 
-### Time and Rounds
-- Round duration: **70 seconds**
-- Per-order timer: **20 seconds**
+Customers walk in, sit at a table, and place orders. You pick up dishes, carry them over, and serve before patience runs out. The faster you serve, the more coins and reputation you earn — green-tier serves reward the most, while expired orders cost you reputation.
 
-### Speed-Based Scoring
-
-| Tier | Serve Time | Coins | Reputation |
-|---|---:|---:|---:|
-| Green | < 5s | +200 | +10 |
-| Yellow | 5s to 10s | +100 | +5 |
-| Red | > 10s | +20 | +1 |
-| Miss | Expired | 0 | -5 |
-
-### Levels
-
-| Level | Seats | Plate Capacity | Spawn Rate | Pass Target |
-|---|---:|---:|---:|---:|
-| 1 (Beginner) | 4 | 1 | 8s | 1300 |
-| 2 (Intermediate) | 4 | 2 | 6s | 2720 |
-| 3 (Advanced) | 6 | 3 | 4s | 5210 |
-| 4 (Expert) | 8 | 3 | 2.5s | 8660 |
+Four levels scale the chaos: from 4 tables with a single plate in hand, all the way to 8 tables with rapid-fire arrivals and triple plate juggling.
 
 ## 🏗 Architecture
 
 <p align="center">
   <img src="public/output/architecture.png" alt="Architecture Diagram" width="800" />
 </p>
-
-### Implemented Analytics Path in This Repo
-- Event ingestion route: `src/app/api/event/route.ts`
-- Snowflake insert: `src/lib/snowflake/insert.ts`
-- Snowflake query layer: `src/lib/snowflake/dashboard.ts`
-- Dashboard metrics API: `src/app/api/dashboard/metrics/route.ts`
-- Dashboard UI: `src/components/dashboard/DetailedDashboard.tsx`
 
 ## 📊 Dashboard Views
 
@@ -112,11 +87,9 @@ Additional validation panel includes:
 | Charts | Chart.js + react-chartjs-2 |
 | API | Next.js API Routes |
 | Validation | Zod |
-| Streaming | KafkaJS |
 | Data Warehouse | Snowflake SDK |
 | Linting | ESLint + Prettier |
-| Type Safety | TypeScript (strict) |
-| Testing | Vitest + Playwright |
+| Testing | Vitest |
 
 ## 📁 Project Structure
 

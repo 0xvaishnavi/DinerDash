@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type MouseEvent } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 
@@ -24,14 +24,25 @@ const getDifficultyStars = (difficulty: string) => difficulty.match(/⭐+/)?.[0]
 
 export function LevelSelectScreen({ bestScores, onSelectLevel }: LevelSelectScreenProps) {
   const [introLevelId, setIntroLevelId] = useState<number | null>(null);
+  const [mobileModalTop, setMobileModalTop] = useState<number | null>(null);
   const introStory = introLevelId === null ? null : LEVEL_STORY_CONTENT[introLevelId];
 
-  const handleChooseLevel = (level: number, unlocked: boolean) => {
+  const handleChooseLevel = (
+    level: number,
+    unlocked: boolean,
+    event?: MouseEvent<HTMLButtonElement>,
+  ) => {
     if (!unlocked) {
       return;
     }
     playSfx("menuTouch", { volume: 0.7 });
     if (SHOW_LEVEL_INTRO_MODAL) {
+      if (typeof window !== "undefined" && window.innerWidth < 1024 && event?.currentTarget) {
+        const rect = event.currentTarget.getBoundingClientRect();
+        setMobileModalTop(Math.max(8, rect.top - 12));
+      } else {
+        setMobileModalTop(null);
+      }
       setIntroLevelId(level);
       return;
     }
@@ -86,7 +97,7 @@ export function LevelSelectScreen({ bestScores, onSelectLevel }: LevelSelectScre
                       <motion.button
                         type="button"
                         disabled={!unlocked}
-                        onClick={() => handleChooseLevel(cfg.id, unlocked)}
+                        onClick={(event) => handleChooseLevel(cfg.id, unlocked, event)}
                         className={cn(
                           "relative h-[286px] w-[286px] bg-no-repeat",
                           unlocked ? "cursor-pointer" : "cursor-not-allowed opacity-80",
@@ -148,7 +159,7 @@ export function LevelSelectScreen({ bestScores, onSelectLevel }: LevelSelectScre
                       <motion.button
                         type="button"
                         disabled={!unlocked}
-                        onClick={() => handleChooseLevel(cfg.id, unlocked)}
+                        onClick={(event) => handleChooseLevel(cfg.id, unlocked, event)}
                         className={cn(
                           "absolute left-1/2 h-[286px] w-[286px] -translate-x-1/2 bg-no-repeat",
                           cardTopClass,
@@ -226,11 +237,16 @@ export function LevelSelectScreen({ bestScores, onSelectLevel }: LevelSelectScre
       </div>
 
       {SHOW_LEVEL_INTRO_MODAL && introStory && (
-        <div className="fixed inset-0 z-[120] flex items-end justify-center overflow-x-hidden overflow-y-auto bg-amber-950/35 px-4 py-4 sm:items-center sm:py-6">
+        <div className="fixed inset-0 z-[120] flex items-start justify-center overflow-x-hidden overflow-y-auto bg-amber-950/35 px-4 py-4 sm:items-center sm:py-6">
           <motion.div
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             className="panel relative max-h-[90vh] w-full max-w-3xl overflow-x-hidden overflow-y-auto border-[color:var(--maroon)] p-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:p-5 md:max-h-none md:overflow-hidden md:p-6"
+            style={
+              mobileModalTop !== null
+                ? { marginTop: `${mobileModalTop}px` }
+                : undefined
+            }
           >
             <motion.span
               className="pointer-events-none absolute -left-24 -top-24 h-64 w-64 rounded-full bg-[radial-gradient(circle,rgba(212,80,10,0.24),rgba(212,80,10,0))]"
@@ -263,6 +279,7 @@ export function LevelSelectScreen({ bestScores, onSelectLevel }: LevelSelectScre
                     className="btn-secondary"
                     onClick={() => {
                       playSfx("menuTouch", { volume: 0.7 });
+                      setMobileModalTop(null);
                       setIntroLevelId(null);
                     }}
                   >
@@ -274,6 +291,7 @@ export function LevelSelectScreen({ bestScores, onSelectLevel }: LevelSelectScre
                     onClick={() => {
                       playSfx("menuTouch", { volume: 0.7 });
                       const level = introStory.id;
+                      setMobileModalTop(null);
                       setIntroLevelId(null);
                       onSelectLevel(level);
                     }}

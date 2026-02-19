@@ -13,6 +13,9 @@ import {
 import { registerChartJs } from "@/lib/charts/register";
 
 registerChartJs();
+const LAST_SESSION_STORAGE_KEY = "diner_dash_last_session_id";
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 const chartOptions = {
   responsive: true,
@@ -46,18 +49,52 @@ type MetricsResponse = {
 
 export function DetailedDashboard() {
   const searchParams = useSearchParams();
-  const sessionId = searchParams.get("session");
+  const querySessionId = searchParams.get("session");
 
   const [metrics, setMetrics] = useState<DashboardMetrics>(() =>
-    createFallbackDashboardMetrics(sessionId),
+    createFallbackDashboardMetrics(null),
   );
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [sessionResolved, setSessionResolved] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
+    const normalizedQuerySessionId =
+      querySessionId && UUID_PATTERN.test(querySessionId) ? querySessionId : null;
+
+    if (normalizedQuerySessionId) {
+      setSessionId(normalizedQuerySessionId);
+      setSessionResolved(true);
+      return;
+    }
+
+    try {
+      const storedSessionId = window.localStorage.getItem(LAST_SESSION_STORAGE_KEY);
+      const normalizedStoredSessionId =
+        storedSessionId && UUID_PATTERN.test(storedSessionId) ? storedSessionId : null;
+      setSessionId(normalizedStoredSessionId);
+    } catch {
+      setSessionId(null);
+    } finally {
+      setSessionResolved(true);
+    }
+  }, [querySessionId]);
+
+  useEffect(() => {
+    if (!sessionResolved) {
+      return;
+    }
+    if (!sessionId) {
+      setFetchError("session_unavailable");
+      return;
+    }
+
     let active = true;
 
     const load = async () => {
+      setFetchError(null);
       try {
-        const query = sessionId ? `?session_id=${encodeURIComponent(sessionId)}` : "";
+        const query = `?session_id=${encodeURIComponent(sessionId)}`;
         const response = await fetch(`/api/dashboard/metrics${query}`, {
           method: "GET",
           cache: "no-store",
@@ -71,13 +108,13 @@ export function DetailedDashboard() {
         if (response.ok && data.ok && data.metrics) {
           setMetrics(data.metrics);
         } else {
-          setMetrics(createFallbackDashboardMetrics(sessionId));
+          setFetchError(data.error ?? "session_metrics_unavailable");
         }
       } catch {
         if (!active) {
           return;
         }
-        setMetrics(createFallbackDashboardMetrics(sessionId));
+        setFetchError("session_metrics_unavailable");
       }
     };
 
@@ -86,7 +123,7 @@ export function DetailedDashboard() {
     return () => {
       active = false;
     };
-  }, [sessionId]);
+  }, [sessionId, sessionResolved]);
 
   const funnelData = useMemo(
     () => ({
@@ -279,8 +316,40 @@ export function DetailedDashboard() {
     ],
     [metrics.kpis],
   );
+
+  const showLoading = !sessionResolved;
+  const showSessionRequired = sessionResolved && (!sessionId || Boolean(fetchError));
+
   return (
     <section className="space-y-4">
+      {showLoading ? (
+        <article className="panel border-[color:var(--turquoise)] p-5">
+          <h2 className="font-[var(--font-baloo)] text-2xl text-amber-950">
+            Loading Session Analytics
+          </h2>
+          <p className="mt-1 text-sm text-amber-950/80">
+            Resolving session context for this dashboard view.
+          </p>
+        </article>
+      ) : null}
+
+      {showSessionRequired ? (
+        <article className="panel border-[color:var(--maroon)] p-5">
+          <h2 className="font-[var(--font-baloo)] text-2xl text-amber-950">
+            Session Data Required
+          </h2>
+          <p className="mt-2 text-sm text-amber-950/80">
+            This dashboard only shows metrics for a single gameplay session.
+            Start a round and open analytics from the game screen to view that session.
+          </p>
+          {fetchError ? (
+            <p className="mt-2 text-xs text-rose-700">Error: {fetchError}</p>
+          ) : null}
+        </article>
+      ) : null}
+
+      {!showLoading && !showSessionRequired ? (
+        <>
       <div className="grid gap-[15px] sm:grid-cols-2 xl:grid-cols-3">
         {kpiCards.map((card, idx) => (
           <motion.article
@@ -394,6 +463,8 @@ export function DetailedDashboard() {
           </div>
         </article>
       </div>
+        </>
+      ) : null}
     </section>
   );
 }

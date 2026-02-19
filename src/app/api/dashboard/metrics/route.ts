@@ -8,16 +8,32 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const requestedSessionId = searchParams.get("session_id");
+    if (!requestedSessionId) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "session_id_required",
+        },
+        { status: 400 },
+      );
+    }
+
     const sessionId = parseSessionId(requestedSessionId);
+    if (!sessionId) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "invalid_session_id",
+        },
+        { status: 400 },
+      );
+    }
+
     const metrics = await getDashboardMetrics(sessionId);
 
     return NextResponse.json({
       ok: true,
       metrics,
-      warning:
-        requestedSessionId && !sessionId
-          ? "invalid_session_id_ignored"
-          : undefined,
     });
   } catch (error) {
     console.error("[dashboard] metrics route failed", error);
