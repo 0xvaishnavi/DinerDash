@@ -162,12 +162,21 @@ function pickCustomerSprite(
   const pool = available.length > 0 ? available : options;
 
   const seated = pool[Math.floor(Math.random() * pool.length)];
-  const standingOptions = CUSTOMER_STANDING_SPRITES[type];
-  const seatedIndex = typeOptions.indexOf(seated);
-  const standing =
-    standingOptions[seatedIndex] ??
-    standingOptions[0] ??
-    CUSTOMER_STANDING_SPRITES.young[0];
+
+  // Determine the actual type/index of the chosen sprite so the standing
+  // sprite always matches, even when the seated sprite came from fallback.
+  let standing: string;
+  const youngIndex = CUSTOMER_SPRITES.young.indexOf(seated);
+  const tradIndex = CUSTOMER_SPRITES.traditional.indexOf(seated);
+
+  if (youngIndex !== -1) {
+    standing = CUSTOMER_STANDING_SPRITES.young[youngIndex];
+  } else if (tradIndex !== -1) {
+    standing = CUSTOMER_STANDING_SPRITES.traditional[tradIndex];
+  } else {
+    standing = CUSTOMER_STANDING_SPRITES.young[0];
+  }
+
   return { seated, standing };
 }
 

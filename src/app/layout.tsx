@@ -38,6 +38,17 @@ export default function RootLayout({
         <div className="min-h-screen bg-[radial-gradient(circle_at_25%_20%,#ffe9c1_0%,transparent_35%),radial-gradient(circle_at_75%_10%,#ffd7b8_0%,transparent_30%),var(--background)]">
           <GlobalNavbar />
           <div className="pt-24 sm:pt-28 md:pt-32">{children}</div>
+          <footer className="py-6 text-center text-sm text-amber-950/50">
+            Made with &hearts; by{" "}
+            <a
+              href="https://github.com/0xvaishnavi"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-amber-950/70 underline decoration-amber-400 underline-offset-2 transition hover:text-amber-950"
+            >
+              @0xvaishnavi
+            </a>
+          </footer>
         </div>
         <Analytics />
       </body>
