@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="https://github.com/0xvaishnavi/DinerDash">GitHub</a> &nbsp;&middot;&nbsp;
-  <a href="https://example.com">Live Demo</a> &nbsp;&middot;&nbsp;
+  <a href="https://dinerdash.vercel.app">Live Demo</a> &nbsp;&middot;&nbsp;
   <a href="https://drive.google.com/file/d/1jwgMvpxiJzxvR8nJX7tFNJPRJR0VIAmv/view?usp=drive_link">Demo Video</a>
 </p>
 
