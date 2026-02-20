@@ -49,6 +49,24 @@ function toMap(rows: Row[], keyField: string, valueField: string): Record<string
   }, {});
 }
 
+/** Map legacy dish keys from previous versions to current DASHBOARD_DISHES keys. */
+const LEGACY_DISH_MAP: Record<string, string> = {
+  dosa: "chicken",
+  chole_bhature: "chole_bhature",
+  parathe: "ramen",
+  pani_puri: "taco",
+  vada_pav: "sushi",
+};
+
+function normalizeDishMap(raw: Record<string, number>): Record<string, number> {
+  const result: Record<string, number> = {};
+  for (const [key, value] of Object.entries(raw)) {
+    const normalized = LEGACY_DISH_MAP[key] ?? key;
+    result[normalized] = (result[normalized] ?? 0) + value;
+  }
+  return result;
+}
+
 function isSnowflakeConfigured(): boolean {
   return Boolean(
     process.env.SNOWFLAKE_ACCOUNT &&
@@ -286,10 +304,8 @@ export async function getDashboardMetrics(
       requested AS (
         SELECT LOWER(
           COALESCE(
-            PAYLOAD:dish_1::STRING,
-            PAYLOAD:DISH_1::STRING,
             PAYLOAD:"dish_1"::STRING,
-            PAYLOAD:"DISH_1"::STRING
+            PAYLOAD:dish_1::STRING
           )
         ) AS DISH_KEY
         FROM base
@@ -297,10 +313,8 @@ export async function getDashboardMetrics(
         UNION ALL
         SELECT LOWER(
           COALESCE(
-            PAYLOAD:dish_2::STRING,
-            PAYLOAD:DISH_2::STRING,
             PAYLOAD:"dish_2"::STRING,
-            PAYLOAD:"DISH_2"::STRING
+            PAYLOAD:dish_2::STRING
           )
         ) AS DISH_KEY
         FROM base
@@ -309,25 +323,37 @@ export async function getDashboardMetrics(
       served AS (
         SELECT LOWER(
           COALESCE(
-            PAYLOAD:dish_name::STRING,
-            PAYLOAD:DISH_NAME::STRING,
             PAYLOAD:"dish_name"::STRING,
-            PAYLOAD:"DISH_NAME"::STRING
+            PAYLOAD:dish_name::STRING
           )
         ) AS DISH_KEY
         FROM base
         WHERE EVENT_NAME = 'order_served'
       ),
+      req_counts AS (
+        SELECT DISH_KEY, COUNT(*) AS CNT
+        FROM requested
+        WHERE DISH_KEY IS NOT NULL AND DISH_KEY <> ''
+        GROUP BY DISH_KEY
+      ),
+      srv_counts AS (
+        SELECT DISH_KEY, COUNT(*) AS CNT
+        FROM served
+        WHERE DISH_KEY IS NOT NULL AND DISH_KEY <> ''
+        GROUP BY DISH_KEY
+      ),
       all_dishes AS (
-        SELECT DISH_KEY FROM requested WHERE DISH_KEY IS NOT NULL AND DISH_KEY <> ''
+        SELECT DISH_KEY FROM req_counts
         UNION
-        SELECT DISH_KEY FROM served WHERE DISH_KEY IS NOT NULL AND DISH_KEY <> ''
+        SELECT DISH_KEY FROM srv_counts
       )
       SELECT
         d.DISH_KEY,
-        COALESCE((SELECT COUNT(*) FROM requested r WHERE r.DISH_KEY = d.DISH_KEY), 0) AS REQUESTED,
-        COALESCE((SELECT COUNT(*) FROM served s WHERE s.DISH_KEY = d.DISH_KEY), 0) AS SERVED
-      FROM all_dishes d;
+        COALESCE(r.CNT, 0) AS REQUESTED,
+        COALESCE(s.CNT, 0) AS SERVED
+      FROM all_dishes d
+      LEFT JOIN req_counts r ON r.DISH_KEY = d.DISH_KEY
+      LEFT JOIN srv_counts s ON s.DISH_KEY = d.DISH_KEY;
       `,
       binds,
     );
@@ -368,9 +394,9 @@ export async function getDashboardMetrics(
 
     const speedLabels = speedRows.map((row) => asString(row, "LABEL"));
 
-    const revenueByDish = toMap(revenueRows, "DISH_KEY", "REVENUE");
-    const demandRequestedByDish = toMap(demandRows, "DISH_KEY", "REQUESTED");
-    const demandServedByDish = toMap(demandRows, "DISH_KEY", "SERVED");
+    const revenueByDish = normalizeDishMap(toMap(revenueRows, "DISH_KEY", "REVENUE"));
+    const demandRequestedByDish = normalizeDishMap(toMap(demandRows, "DISH_KEY", "REQUESTED"));
+    const demandServedByDish = normalizeDishMap(toMap(demandRows, "DISH_KEY", "SERVED"));
 
     const eventCounts = validationCountRows.reduce<Record<string, number>>((acc, row) => {
       const eventName = asString(row, "EVENT_NAME");
