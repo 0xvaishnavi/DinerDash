@@ -7,13 +7,13 @@ import { motion } from "framer-motion";
 import { Bar, Line } from "react-chartjs-2";
 
 import {
-  createFallbackDashboardMetrics,
   type DashboardMetrics,
 } from "@/lib/dashboard/types";
 import { registerChartJs } from "@/lib/charts/register";
 
 registerChartJs();
 const LAST_SESSION_STORAGE_KEY = "diner_dash_last_session_id";
+const LAST_COMPLETED_SESSION_STORAGE_KEY = "diner_dash_last_completed_session_id";
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -47,26 +47,40 @@ type MetricsResponse = {
   error?: string;
 };
 
-export function DetailedDashboard() {
+interface DetailedDashboardProps {
+  onResolved?: () => void;
+}
+
+export function DetailedDashboard({ onResolved }: DetailedDashboardProps) {
   const searchParams = useSearchParams();
   const querySessionId = searchParams.get("session");
 
-  const [metrics, setMetrics] = useState<DashboardMetrics>(() =>
-    createFallbackDashboardMetrics(null),
-  );
+  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [sessionResolved, setSessionResolved] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     const normalizedQuerySessionId =
       querySessionId && UUID_PATTERN.test(querySessionId) ? querySessionId : null;
     try {
+      const completedSessionId = window.localStorage.getItem(
+        LAST_COMPLETED_SESSION_STORAGE_KEY,
+      );
+      const normalizedCompletedSessionId =
+        completedSessionId && UUID_PATTERN.test(completedSessionId)
+          ? completedSessionId
+          : null;
       const storedSessionId = window.localStorage.getItem(LAST_SESSION_STORAGE_KEY);
       const normalizedStoredSessionId =
         storedSessionId && UUID_PATTERN.test(storedSessionId) ? storedSessionId : null;
-      // Prefer the most recent local gameplay session so dashboard reflects latest run.
-      setSessionId(normalizedStoredSessionId ?? normalizedQuerySessionId);
+      // Strict priority: explicit query session (current game flow) > latest completed > latest local.
+      setSessionId(
+        normalizedQuerySessionId ??
+          normalizedCompletedSessionId ??
+          normalizedStoredSessionId,
+      );
     } catch {
       setSessionId(normalizedQuerySessionId);
     } finally {
@@ -80,6 +94,7 @@ export function DetailedDashboard() {
     }
     if (!sessionId) {
       setFetchError("session_unavailable");
+      setIsFetching(false);
       return;
     }
 
@@ -87,6 +102,7 @@ export function DetailedDashboard() {
 
     const load = async () => {
       setFetchError(null);
+      setIsFetching(true);
       try {
         const query = `?session_id=${encodeURIComponent(sessionId)}`;
         const response = await fetch(`/api/dashboard/metrics${query}`, {
@@ -99,16 +115,22 @@ export function DetailedDashboard() {
         }
 
         const data = (await response.json()) as MetricsResponse;
-        if (response.ok && data.ok && data.metrics) {
+        if (response.ok && data.ok && data.metrics && data.metrics.source !== "fallback") {
           setMetrics(data.metrics);
         } else {
+          setMetrics(null);
           setFetchError(data.error ?? "session_metrics_unavailable");
         }
       } catch {
         if (!active) {
           return;
         }
+        setMetrics(null);
         setFetchError("session_metrics_unavailable");
+      } finally {
+        if (active) {
+          setIsFetching(false);
+        }
       }
     };
 
@@ -119,75 +141,87 @@ export function DetailedDashboard() {
     };
   }, [sessionId, sessionResolved]);
 
+  useEffect(() => {
+    if (!sessionResolved || isFetching) {
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      onResolved?.();
+    }, 350);
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [isFetching, onResolved, sessionResolved]);
+
   const funnelData = useMemo(
     () => ({
-      labels: metrics.funnel.labels,
+      labels: metrics?.funnel.labels ?? [],
       datasets: [
         {
           label: "Orders",
-          data: metrics.funnel.values,
+          data: metrics?.funnel.values ?? [],
           backgroundColor: ["#d4500a", "#00a693", "#c8960c", "#800020"],
           borderRadius: 8,
         },
       ],
     }),
-    [metrics.funnel.labels, metrics.funnel.values],
+    [metrics?.funnel.labels, metrics?.funnel.values],
   );
 
   const speedTierData = useMemo(
     () => ({
-      labels: metrics.speedTiers.labels,
+      labels: metrics?.speedTiers.labels ?? [],
       datasets: [
         {
           label: "Fast (Green)",
-          data: metrics.speedTiers.green,
+          data: metrics?.speedTiers.green ?? [],
           backgroundColor: "#3fb950",
           stack: "speed",
         },
         {
           label: "OK (Yellow)",
-          data: metrics.speedTiers.yellow,
+          data: metrics?.speedTiers.yellow ?? [],
           backgroundColor: "#e3b341",
           stack: "speed",
         },
         {
           label: "Slow (Red)",
-          data: metrics.speedTiers.red,
+          data: metrics?.speedTiers.red ?? [],
           backgroundColor: "#f85149",
           stack: "speed",
         },
       ],
     }),
     [
-      metrics.speedTiers.green,
-      metrics.speedTiers.labels,
-      metrics.speedTiers.red,
-      metrics.speedTiers.yellow,
+      metrics?.speedTiers.green,
+      metrics?.speedTiers.labels,
+      metrics?.speedTiers.red,
+      metrics?.speedTiers.yellow,
     ],
   );
 
   const revenueDishData = useMemo(
     () => ({
-      labels: metrics.revenuePerDish.labels,
+      labels: metrics?.revenuePerDish.labels ?? [],
       datasets: [
         {
           label: "Revenue (INR)",
-          data: metrics.revenuePerDish.values,
+          data: metrics?.revenuePerDish.values ?? [],
           backgroundColor: ["#d4500a", "#800020", "#c8960c", "#00a693", "#6b3f1d"],
           borderRadius: 8,
         },
       ],
     }),
-    [metrics.revenuePerDish.labels, metrics.revenuePerDish.values],
+    [metrics?.revenuePerDish.labels, metrics?.revenuePerDish.values],
   );
 
   const utilizationData = useMemo(
     () => ({
-      labels: metrics.utilization.labels,
+      labels: metrics?.utilization.labels ?? [],
       datasets: [
         {
           label: "Occupied Seats",
-          data: metrics.utilization.occupied,
+          data: metrics?.utilization.occupied ?? [],
           borderColor: "#00a693",
           backgroundColor: "rgba(0, 166, 147, 0.20)",
           fill: true,
@@ -196,16 +230,16 @@ export function DetailedDashboard() {
         },
       ],
     }),
-    [metrics.utilization.labels, metrics.utilization.occupied],
+    [metrics?.utilization.labels, metrics?.utilization.occupied],
   );
 
   const satisfactionData = useMemo(
     () => ({
-      labels: metrics.satisfaction.labels,
+      labels: metrics?.satisfaction.labels ?? [],
       datasets: [
         {
           label: "Reputation",
-          data: metrics.satisfaction.reputation,
+          data: metrics?.satisfaction.reputation ?? [],
           borderColor: "#800020",
           backgroundColor: "rgba(128, 0, 32, 0.18)",
           fill: true,
@@ -214,16 +248,16 @@ export function DetailedDashboard() {
         },
       ],
     }),
-    [metrics.satisfaction.labels, metrics.satisfaction.reputation],
+    [metrics?.satisfaction.labels, metrics?.satisfaction.reputation],
   );
 
   const throughputData = useMemo(
     () => ({
-      labels: metrics.throughput.labels,
+      labels: metrics?.throughput.labels ?? [],
       datasets: [
         {
           label: "Orders Completed",
-          data: metrics.throughput.completed,
+          data: metrics?.throughput.completed ?? [],
           borderColor: "#d4500a",
           backgroundColor: "rgba(212, 80, 10, 0.18)",
           fill: true,
@@ -232,7 +266,7 @@ export function DetailedDashboard() {
         },
         {
           label: "Orders Expired",
-          data: metrics.throughput.expired,
+          data: metrics?.throughput.expired ?? [],
           borderColor: "#800020",
           backgroundColor: "rgba(128, 0, 32, 0.14)",
           fill: true,
@@ -241,31 +275,31 @@ export function DetailedDashboard() {
         },
       ],
     }),
-    [metrics.throughput.completed, metrics.throughput.expired, metrics.throughput.labels],
+    [metrics?.throughput.completed, metrics?.throughput.expired, metrics?.throughput.labels],
   );
 
   const dishDemandVsServedData = useMemo(
     () => ({
-      labels: metrics.demandVsServed.labels,
+      labels: metrics?.demandVsServed.labels ?? [],
       datasets: [
         {
           label: "Requested",
-          data: metrics.demandVsServed.requested,
+          data: metrics?.demandVsServed.requested ?? [],
           backgroundColor: "rgba(128, 0, 32, 0.62)",
           borderRadius: 8,
         },
         {
           label: "Served",
-          data: metrics.demandVsServed.served,
+          data: metrics?.demandVsServed.served ?? [],
           backgroundColor: "rgba(0, 166, 147, 0.72)",
           borderRadius: 8,
         },
       ],
     }),
     [
-      metrics.demandVsServed.labels,
-      metrics.demandVsServed.requested,
-      metrics.demandVsServed.served,
+      metrics?.demandVsServed.labels,
+      metrics?.demandVsServed.requested,
+      metrics?.demandVsServed.served,
     ],
   );
 
@@ -273,46 +307,47 @@ export function DetailedDashboard() {
     () => [
       {
         label: "Orders Served",
-        value: metrics.kpis.ordersServed.toString(),
+        value: metrics?.kpis.ordersServed?.toString() ?? "0",
         tone: "text-emerald-700",
         icon: "/sprite/female-customer-1.png",
       },
       {
         label: "Orders Expired",
-        value: metrics.kpis.ordersExpired.toString(),
+        value: metrics?.kpis.ordersExpired?.toString() ?? "0",
         tone: "text-red-700",
         icon: "/sprite/male-customer-2.png",
       },
       {
         label: "Revenue",
-        value: `INR ${metrics.kpis.revenue.toLocaleString("en-IN")}`,
+        value: `INR ${(metrics?.kpis.revenue ?? 0).toLocaleString("en-IN")}`,
         tone: "text-amber-700",
         icon: "/elements/coin.png",
       },
       {
         label: "Avg Serve Time",
-        value: `${metrics.kpis.avgServeTimeSeconds.toFixed(1)}s`,
+        value: `${(metrics?.kpis.avgServeTimeSeconds ?? 0).toFixed(1)}s`,
         tone: "text-cyan-700",
         icon: "/elements/tray.png",
       },
       {
         label: "Peak Utilization",
-        value: `${metrics.kpis.peakUtilization} seats`,
+        value: `${metrics?.kpis.peakUtilization ?? 0} seats`,
         tone: "text-rose-700",
         icon: "/ui/wooden-table.png",
       },
       {
         label: "Final Reputation",
-        value: metrics.kpis.finalReputation.toString(),
+        value: metrics?.kpis.finalReputation?.toString() ?? "0",
         tone: "text-fuchsia-700",
         icon: "/sprite/female-customer-2.png",
       },
     ],
-    [metrics.kpis],
+    [metrics?.kpis],
   );
 
-  const showLoading = !sessionResolved;
-  const showSessionRequired = sessionResolved && (!sessionId || Boolean(fetchError));
+  const showLoading = !sessionResolved || isFetching;
+  const showSessionRequired =
+    sessionResolved && !isFetching && (!sessionId || Boolean(fetchError) || !metrics);
 
   return (
     <section className="space-y-4">

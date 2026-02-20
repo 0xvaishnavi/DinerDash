@@ -18,6 +18,7 @@ interface GameNavbarProps {
 const NAV_ICON_CLASS =
   "inline-flex h-12 w-12 items-center justify-center rounded-2xl border-0 bg-transparent shadow-none transition duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 sm:h-14 sm:w-14";
 const LAST_SESSION_STORAGE_KEY = "diner_dash_last_session_id";
+const LAST_COMPLETED_SESSION_STORAGE_KEY = "diner_dash_last_completed_session_id";
 
 const ICON_MOTION = {
   whileHover: { y: -4, scale: 1.2 },
@@ -86,8 +87,12 @@ export function GameNavbar({
   useEffect(() => {
     const syncFromStorage = () => {
       try {
+        const completedValue = window.localStorage.getItem(
+          LAST_COMPLETED_SESSION_STORAGE_KEY,
+        );
         const value = window.localStorage.getItem(LAST_SESSION_STORAGE_KEY);
-        setLastSessionId(value && value.trim() ? value : null);
+        const preferred = completedValue && completedValue.trim() ? completedValue : value;
+        setLastSessionId(preferred && preferred.trim() ? preferred : null);
       } catch {
         setLastSessionId(null);
       }

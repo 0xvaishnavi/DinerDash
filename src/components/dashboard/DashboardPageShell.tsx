@@ -17,7 +17,8 @@ export function DashboardPageShell() {
 }
 
 function DashboardPageContent() {
-  const [loading, setLoading] = useState(true);
+  const [minLoaderDone, setMinLoaderDone] = useState(false);
+  const [dashboardReady, setDashboardReady] = useState(false);
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
@@ -29,7 +30,7 @@ function DashboardPageContent() {
 
       if (elapsed >= LOADER_DURATION_MS) {
         window.clearInterval(timer);
-        setLoading(false);
+        setMinLoaderDone(true);
       }
     }, LOADER_TICK_MS);
 
@@ -38,35 +39,38 @@ function DashboardPageContent() {
     };
   }, []);
 
-  if (loading) {
-    return (
-      <main className="mx-auto flex min-h-screen w-full flex-col gap-3 px-[5%] py-3 sm:gap-4 sm:py-4">
-        <section className="panel mx-auto w-full max-w-md border-[color:var(--maroon)] p-5 text-center sm:p-6">
-          <Image
-            src="/logo.png"
-            alt="Diner Dash Logo"
-            width={200}
-            height={200}
-            className="mx-auto h-32 w-32 object-cover"
-            priority
-          />
-          <p className="mt-4 font-[var(--font-baloo)] text-2xl text-amber-950">
-            Loading Analytics Dashboard
-          </p>
-          <div className="mt-4 h-3 w-full overflow-hidden rounded-full bg-amber-100">
-            <div
-              className="h-full rounded-full bg-[color:var(--saffron)] transition-all duration-75"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          <p className="mt-2 text-sm text-amber-950/70">{progress}%</p>
-        </section>
-      </main>
-    );
-  }
+  const loading = !(minLoaderDone && dashboardReady);
 
   return (
-    <main className="mx-auto flex min-h-screen w-full flex-col gap-3 px-[5%] py-3 sm:gap-4 sm:py-4">
+    <>
+      {loading && (
+        <div className="fixed inset-0 z-[180] flex items-center justify-center bg-[linear-gradient(145deg,#fff4de_0%,#ffe6c9_45%,#f7e6cf_100%)] px-6">
+          <section className="panel w-full max-w-md border-[color:var(--maroon)] p-5 text-center sm:p-6">
+            <Image
+              src="/logo.png"
+              alt="Diner Dash Logo"
+              width={200}
+              height={200}
+              className="mx-auto h-32 w-32 object-cover"
+              priority
+            />
+            <p className="mt-4 font-[var(--font-baloo)] text-2xl text-amber-950">
+              Loading Analytics Dashboard
+            </p>
+            <div className="mt-4 h-3 w-full overflow-hidden rounded-full bg-amber-100">
+              <div
+                className="h-full rounded-full bg-[color:var(--saffron)] transition-all duration-75"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <p className="mt-2 text-sm text-amber-950/70">
+              {Math.max(progress, minLoaderDone ? 100 : progress)}%
+            </p>
+          </section>
+        </div>
+      )}
+
+      <main className="mx-auto flex min-h-screen w-full flex-col gap-3 px-[5%] py-3 sm:gap-4 sm:py-4">
       <section className="panel border-[color:var(--turquoise)] px-4 py-4 sm:px-5">
         <div>
           <h1 className="font-[var(--font-baloo)] text-3xl leading-tight text-amber-950 sm:text-4xl md:text-5xl">
@@ -78,7 +82,8 @@ function DashboardPageContent() {
         </div>
       </section>
 
-      <DetailedDashboard />
-    </main>
+      <DetailedDashboard onResolved={() => setDashboardReady(true)} />
+      </main>
+    </>
   );
 }

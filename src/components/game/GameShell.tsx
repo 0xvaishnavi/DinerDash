@@ -88,24 +88,25 @@ const DEFAULT_LEVEL_ONE_TUTORIAL_FLAGS: LevelOneTutorialFlags = {
 const WAITER_SIZE = 121;
 const WAITER_HALF = WAITER_SIZE / 2;
 const CUSTOMER_SIZE_PX = 106;
-const TABLE_HEIGHT_PX = 187;
+const TABLE_HEIGHT_PX = 224;
 const TABLE_HALF_HEIGHT_PX = TABLE_HEIGHT_PX / 2;
 const WAITER_SPEED_PX_PER_SEC = 277;
 const SERVE_DISTANCE_PX = 145;
 const COUNTER_PICK_DISTANCE_PX = 120;
 const COUNTER_RESPAWN_MS = 3000;
-const CUSTOMER_LEAVE_DELAY_MS = 500;
+const CUSTOMER_LEAVE_DELAY_MS = 3000;
+const SERVED_CUSTOMER_FADE_MS = 450;
 const EXPIRED_CUSTOMER_FADE_MS = 1000;
 const CUSTOMER_WALK_DURATION_MS = 1200;
 const ENTRANCE_X_PERCENT = 95;
 const ENTRANCE_Y_PERCENT = 6;
 const TABLE_SPRITE_TOP_PERCENT = 58;
-const CUSTOMER_BASE_OFFSET_PERCENT = 2;
-const CUSTOMER_Y_OFFSET_MULTIPLIER = 11;
-const CUSTOMER_TOP_PERCENT =
-  TABLE_SPRITE_TOP_PERCENT - CUSTOMER_BASE_OFFSET_PERCENT * CUSTOMER_Y_OFFSET_MULTIPLIER;
-const ORDER_BUBBLE_TOP_PERCENT = -11.5;
+const TABLE_SERVED_DISH_TOP_PERCENT = 52;
+const CUSTOMER_LEFT_PERCENT = 26;
+const CUSTOMER_TOP_PERCENT = 46;
+const ORDER_BUBBLE_TOP_PERCENT = -6.5;
 const LAST_SESSION_STORAGE_KEY = "diner_dash_last_session_id";
+const LAST_COMPLETED_SESSION_STORAGE_KEY = "diner_dash_last_completed_session_id";
 const TABLE_TOP_SAFE_PADDING_PX = 12;
 const ROUND_START_DELAY_MS = 3000;
 
@@ -916,6 +917,19 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
         setFeedback(
           `Round Complete! Total Revenue: ₹${finalState.revenue} | Reputation: ${finalState.reputation}`,
         );
+        try {
+          window.localStorage.setItem(
+            LAST_COMPLETED_SESSION_STORAGE_KEY,
+            finalState.sessionId,
+          );
+          window.dispatchEvent(
+            new CustomEvent("dinerDashSessionUpdated", {
+              detail: { sessionId: finalState.sessionId },
+            }),
+          );
+        } catch {
+          // Ignore storage failures and keep gameplay unaffected.
+        }
 
         onRoundComplete?.({
           ...summary,
@@ -1339,20 +1353,34 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
       });
 
       const leaveTimerId = window.setTimeout(() => {
-        customersRef.current = customersRef.current.filter(
-          (item) => item.orderId !== updatedCustomer.orderId,
+        customersRef.current = customersRef.current.map((item) =>
+          item.orderId === updatedCustomer.orderId
+            ? { ...item, leavingReason: "served" }
+            : item,
         );
         setActiveCustomers(customersRef.current);
-        void emitGameEvent({
-          eventName: "customer_left",
-          sessionId,
-          level,
-          payload: {
-            customer_id: updatedCustomer.customerId,
-            left_reason: "served",
-            satisfaction_score: 95,
-          },
-        });
+
+        const removeTimerId = window.setTimeout(() => {
+          customersRef.current = customersRef.current.filter(
+            (item) => item.orderId !== updatedCustomer.orderId,
+          );
+          setActiveCustomers(customersRef.current);
+          void emitGameEvent({
+            eventName: "customer_left",
+            sessionId,
+            level,
+            payload: {
+              customer_id: updatedCustomer.customerId,
+              left_reason: "served",
+              satisfaction_score: 95,
+            },
+          });
+          customerLeaveTimersRef.current = customerLeaveTimersRef.current.filter(
+            (id) => id !== removeTimerId,
+          );
+        }, SERVED_CUSTOMER_FADE_MS);
+        customerLeaveTimersRef.current.push(removeTimerId);
+
         customerLeaveTimersRef.current = customerLeaveTimersRef.current.filter(
           (id) => id !== leaveTimerId,
         );
@@ -1472,7 +1500,10 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
     () => (selectedPlateSlot === null ? null : (plateSlots[selectedPlateSlot]?.dish ?? null)),
     [plateSlots, selectedPlateSlot],
   );
-  const analyticsHref = useMemo(() => `/dashboard?session=${sessionId}`, [sessionId]);
+  const analyticsHref = useMemo(
+    () => `/dashboard?session=${encodeURIComponent(sessionId)}`,
+    [sessionId],
+  );
   const tableCenterBounds = useMemo(() => {
     if (arenaMetrics.floorHeight <= 0) {
       return null;
@@ -1560,7 +1591,7 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
                   }}
                   type="button"
                   onClick={() => void onServeTable(tableId)}
-                  className="absolute z-10 h-[187px] w-[173px] -translate-x-1/2 -translate-y-1/2 rounded-xl bg-transparent text-center transition hover:scale-[1.02] focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                  className="absolute z-10 h-[224px] w-[208px] -translate-x-1/2 -translate-y-1/2 rounded-xl bg-transparent text-center transition hover:scale-[1.02] focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
                   style={{
                     left: `${xPercent}%`,
                     top: tableTopPx === null ? `${yPercent}%` : `${tableTopPx}px`,
@@ -1568,7 +1599,7 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
                 >
                 <div className="relative h-full w-full">
                   <div
-                    className="absolute left-1/2 h-[115px] w-[115px] -translate-x-1/2 -translate-y-1/2"
+                    className="absolute left-1/2 h-[138px] w-[138px] -translate-x-1/2 -translate-y-1/2"
                     style={{ top: `${TABLE_SPRITE_TOP_PERCENT}%` }}
                   >
                     <Image
@@ -1581,20 +1612,54 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
 
                   {customer && (
                     <>
+                      {customer.dishesServed.length > 0 && customer.leavingReason !== "expired" && (
+                        <motion.div
+                          className="pointer-events-none absolute left-1/2 z-[22] -translate-x-1/2 -translate-y-1/2"
+                          style={{ top: `${TABLE_SERVED_DISH_TOP_PERCENT}%` }}
+                          initial={false}
+                          animate={
+                            customer.leavingReason === "served"
+                              ? { opacity: 0, scale: 0.94, y: -4 }
+                              : { opacity: 1, scale: 1, y: 0 }
+                          }
+                          transition={{
+                            duration:
+                              customer.leavingReason === "served"
+                                ? SERVED_CUSTOMER_FADE_MS / 1000
+                                : 0.2,
+                            ease: "easeOut",
+                          }}
+                        >
+                          <div className="flex items-center gap-1">
+                            {customer.dishesServed.slice(0, 2).map((dish, index) => (
+                              <Image
+                                key={`${customer.orderId}-served-${dish}-${index}`}
+                                src={DISH_ASSETS[dish].image}
+                                alt={`${DISH_ASSETS[dish].label} served`}
+                                width={28}
+                                height={28}
+                                className="object-contain"
+                              />
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+
                       <motion.div
-                        className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2"
-                        style={{ top: `${CUSTOMER_TOP_PERCENT}%` }}
+                        className="absolute -translate-x-1/2 -translate-y-1/2"
+                        style={{ left: `${CUSTOMER_LEFT_PERCENT}%`, top: `${CUSTOMER_TOP_PERCENT}%` }}
                         initial={false}
                         animate={
-                          customer.leavingReason === "expired"
+                          customer.leavingReason
                             ? { opacity: 0, scale: 0.92, y: -6 }
                             : { opacity: 1, scale: 1, y: 0 }
                         }
                         transition={{
-                          duration:
-                            customer.leavingReason === "expired"
+                          duration: customer.leavingReason
+                            ? customer.leavingReason === "expired"
                               ? EXPIRED_CUSTOMER_FADE_MS / 1000
-                              : 0.2,
+                              : SERVED_CUSTOMER_FADE_MS / 1000
+                            : 0.2,
                           ease: "easeOut",
                         }}
                       >
@@ -1609,7 +1674,8 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
 
                       {customer.leavingReason === "expired" ? (
                         <motion.div
-                          className="absolute left-1/2 top-0 w-[148px] -translate-x-1/2 rounded-md border border-red-900/20 bg-red-50/95 px-2 py-2 text-center"
+                          className="absolute top-0 w-[148px] -translate-x-1/2 rounded-md border border-red-900/20 bg-red-50/95 px-2 py-2 text-center"
+                          style={{ left: `${CUSTOMER_LEFT_PERCENT}%` }}
                           initial={false}
                           animate={{ opacity: 0, y: -8 }}
                           transition={{
@@ -1619,53 +1685,58 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
                         >
                           <span className="text-2xl">😡</span>
                         </motion.div>
-                      ) : (
+                      ) : !customer.leavingReason && pending.length > 0 ? (
                         <div
-                          className="absolute left-1/2 w-[148px] -translate-x-1/2 rounded-md border border-amber-900/15 bg-white/95 px-2 py-1"
-                          style={{ top: `${ORDER_BUBBLE_TOP_PERCENT}%` }}
+                          className="absolute w-[112px] -translate-x-1/2"
+                          style={{
+                            left: `${CUSTOMER_LEFT_PERCENT}%`,
+                            top: `${ORDER_BUBBLE_TOP_PERCENT}%`,
+                          }}
                         >
-                          <div className="relative mb-1 h-2 w-full overflow-hidden rounded bg-amber-100">
+                          <div className="mb-1 h-2 w-full overflow-hidden rounded bg-amber-100">
                             <div
                               className={`h-2 rounded ${timerColor}`}
                               style={{ width: patienceWidth }}
                             />
                           </div>
-                          <div className="relative flex items-center justify-center gap-2">
-                            <Image
-                              src={SPEECH_BUBBLE}
-                              alt=""
-                              fill
-                              className="pointer-events-none object-cover opacity-10"
-                            />
-                            {customer.dishesRequested.map((dish, index) => {
-                              const done = isDishServedAtIndex(customer, index);
-                              return (
-                                <div
-                                  key={`${customer.orderId}-${dish}-${index}`}
-                                  className="relative z-10"
-                                >
-                                  <Image
-                                    src={DISH_ASSETS[dish].image}
-                                    alt={DISH_ASSETS[dish].label}
-                                    width={32}
-                                    height={32}
-                                    className={pending.includes(dish) ? "" : "opacity-65"}
-                                  />
-                                  {done && (
+                          <div className="relative mx-auto w-[92px] rounded-md bg-white/95 px-2 py-1">
+                            <div className="relative flex items-center justify-center gap-1.5">
+                              <Image
+                                src={SPEECH_BUBBLE}
+                                alt=""
+                                fill
+                                className="pointer-events-none object-cover opacity-10"
+                              />
+                              {customer.dishesRequested.map((dish, index) => {
+                                const done = isDishServedAtIndex(customer, index);
+                                return (
+                                  <div
+                                    key={`${customer.orderId}-${dish}-${index}`}
+                                    className="relative z-10"
+                                  >
                                     <Image
-                                      src={GREEN_CHECK}
-                                      alt="Done"
-                                      width={16}
-                                      height={16}
-                                      className="absolute -bottom-1 -right-1"
+                                      src={DISH_ASSETS[dish].image}
+                                      alt={DISH_ASSETS[dish].label}
+                                      width={34}
+                                      height={34}
+                                      className={`${pending.includes(dish) ? "" : "opacity-65"}`}
                                     />
-                                  )}
-                                </div>
-                              );
-                            })}
+                                    {done && (
+                                      <Image
+                                        src={GREEN_CHECK}
+                                        alt="Done"
+                                        width={14}
+                                        height={14}
+                                        className="absolute -bottom-1 -right-1"
+                                      />
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
                           </div>
                         </div>
-                      )}
+                      ) : null}
                     </>
                   )}
                 </div>

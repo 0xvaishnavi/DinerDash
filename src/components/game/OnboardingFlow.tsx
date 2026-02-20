@@ -19,13 +19,25 @@ interface OnboardingFlowProps {
   onComplete: () => void;
 }
 
-const RULES = [
+const DESKTOP_CONTROLS = [
   "Press Start Round.",
-  "Move waiter with arrow keys on desktop, drag on phone.",
-  "Go near a glowing dish at the counter and press Enter/Space to pick it.",
-  "Press Enter/Space near the same selected dish again to unselect it.",
-  "Move near a guest table, then press Enter/Space to serve.",
-  "Match bubble orders before timers run out.",
+  "Move waiter with Arrow Keys.",
+  "Press Enter/Space near a glowing counter dish to pick it.",
+  "Press Enter/Space near the same selected dish to unselect it.",
+  "Press Enter/Space near a guest table to serve.",
+];
+
+const PHONE_CONTROLS = [
+  "Press Start Round.",
+  "Drag anywhere on the arena to move the waiter.",
+  "Tap a dish on the counter to pick it.",
+  "Tap the same selected dish again to unselect it.",
+  "Tap a guest table to serve when waiter is nearby.",
+];
+
+const GAMEPLAY_NOTES = [
+  "Picked counter dishes refill after a short delay.",
+  "Match speech-bubble orders before timers run out.",
 ];
 
 export function OnboardingFlow({ sessionId, onComplete }: OnboardingFlowProps) {
@@ -154,19 +166,44 @@ export function OnboardingFlow({ sessionId, onComplete }: OnboardingFlowProps) {
       <div className="text-center">
         <h2 className="font-[var(--font-baloo)] text-3xl text-amber-950 sm:text-4xl">How To Play</h2>
       </div>
-      <ol className="mt-5 grid gap-3 sm:grid-cols-2">
-        {RULES.map((rule, index) => (
-          <li
-            key={rule}
-            className="flex items-start gap-3 rounded-xl bg-[linear-gradient(145deg,rgba(255,255,255,0.92),rgba(255,244,228,0.94))] px-3 py-3 shadow-[0_8px_16px_rgba(117,74,24,0.14)]"
-          >
-            <span className="mt-0.5 inline-flex h-6 w-6 flex-none items-center justify-center rounded-full bg-[color:var(--saffron)] text-xs font-bold text-amber-50">
-              {index + 1}
-            </span>
-            <span className="text-sm font-semibold text-amber-950 sm:text-base">{rule}</span>
-          </li>
-        ))}
-      </ol>
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        <section className="rounded-xl bg-[linear-gradient(145deg,rgba(255,255,255,0.92),rgba(255,244,228,0.94))] px-4 py-4 shadow-[0_8px_16px_rgba(117,74,24,0.14)]">
+          <h3 className="text-base font-bold text-amber-950 sm:text-lg">Desktop / Keyboard</h3>
+          <ol className="mt-2 space-y-2">
+            {DESKTOP_CONTROLS.map((rule, index) => (
+              <li key={rule} className="flex items-start gap-2">
+                <span className="mt-0.5 inline-flex h-6 w-6 flex-none items-center justify-center rounded-full bg-[color:var(--saffron)] text-xs font-bold text-amber-50">
+                  {index + 1}
+                </span>
+                <span className="text-sm font-semibold text-amber-950">{rule}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
+        <section className="rounded-xl bg-[linear-gradient(145deg,rgba(255,255,255,0.92),rgba(255,244,228,0.94))] px-4 py-4 shadow-[0_8px_16px_rgba(117,74,24,0.14)]">
+          <h3 className="text-base font-bold text-amber-950 sm:text-lg">Phone / Touch</h3>
+          <ol className="mt-2 space-y-2">
+            {PHONE_CONTROLS.map((rule, index) => (
+              <li key={rule} className="flex items-start gap-2">
+                <span className="mt-0.5 inline-flex h-6 w-6 flex-none items-center justify-center rounded-full bg-[color:var(--turquoise)] text-xs font-bold text-white">
+                  {index + 1}
+                </span>
+                <span className="text-sm font-semibold text-amber-950">{rule}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
+      </div>
+      <div className="mt-3 rounded-xl bg-white/85 px-4 py-3 shadow-[0_6px_14px_rgba(117,74,24,0.1)]">
+        <h3 className="text-sm font-bold uppercase tracking-wide text-amber-950/75">Gameplay Notes</h3>
+        <ul className="mt-2 space-y-1">
+          {GAMEPLAY_NOTES.map((note) => (
+            <li key={note} className="text-sm font-semibold text-amber-950">
+              • {note}
+            </li>
+          ))}
+        </ul>
+      </div>
       <div className="mt-6 flex justify-center">
         <button
           type="button"

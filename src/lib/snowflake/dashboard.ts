@@ -2,7 +2,6 @@ import {
   DASHBOARD_DISHES,
   DISH_LABELS,
   EXPECTED_EVENT_TYPES,
-  createFallbackDashboardMetrics,
   type DashboardMetrics,
 } from "@/lib/dashboard/types";
 import { executeQuery } from "@/lib/snowflake/connection";
@@ -64,7 +63,7 @@ function baseFilterSql(): string {
       SELECT
         EVENT_NAME,
         SESSION_ID,
-        TRY_TO_TIMESTAMP_NTZ("TIMESTAMP") AS EVENT_TS,
+        "TIMESTAMP"::TIMESTAMP_NTZ AS EVENT_TS,
         PAYLOAD
       FROM GAME_EVENTS.RAW_EVENTS
       WHERE (? IS NULL OR SESSION_ID = ?)
@@ -80,7 +79,7 @@ export async function getDashboardMetrics(
   sessionId: string | null,
 ): Promise<DashboardMetrics> {
   if (!isSnowflakeConfigured()) {
-    return createFallbackDashboardMetrics(sessionId);
+    throw new Error("snowflake_not_configured");
   }
 
   try {
@@ -103,7 +102,8 @@ export async function getDashboardMetrics(
             LIMIT 1
           ),
           50
-        ) AS FINAL_REPUTATION;
+        ) AS FINAL_REPUTATION
+      FROM base;
       `,
       binds,
     );
@@ -115,7 +115,8 @@ export async function getDashboardMetrics(
         COUNT_IF(EVENT_NAME = 'order_placed') AS ORDER_PLACED,
         COUNT_IF(EVENT_NAME = 'dish_selected') AS DISH_SELECTED,
         COUNT_IF(EVENT_NAME = 'order_served') AS ORDER_SERVED,
-        COUNT_IF(EVENT_NAME = 'order_completed') AS ORDER_COMPLETED;
+        COUNT_IF(EVENT_NAME = 'order_completed') AS ORDER_COMPLETED
+      FROM base;
       `,
       binds,
     );
@@ -283,23 +284,44 @@ export async function getDashboardMetrics(
       `
       ${baseFilterSql()},
       requested AS (
-        SELECT LOWER(PAYLOAD:dish_1::STRING) AS DISH_KEY
+        SELECT LOWER(
+          COALESCE(
+            PAYLOAD:dish_1::STRING,
+            PAYLOAD:DISH_1::STRING,
+            PAYLOAD:"dish_1"::STRING,
+            PAYLOAD:"DISH_1"::STRING
+          )
+        ) AS DISH_KEY
         FROM base
         WHERE EVENT_NAME = 'order_placed'
         UNION ALL
-        SELECT LOWER(PAYLOAD:dish_2::STRING) AS DISH_KEY
+        SELECT LOWER(
+          COALESCE(
+            PAYLOAD:dish_2::STRING,
+            PAYLOAD:DISH_2::STRING,
+            PAYLOAD:"dish_2"::STRING,
+            PAYLOAD:"DISH_2"::STRING
+          )
+        ) AS DISH_KEY
         FROM base
-        WHERE EVENT_NAME = 'order_placed' AND PAYLOAD:dish_2 IS NOT NULL
+        WHERE EVENT_NAME = 'order_placed'
       ),
       served AS (
-        SELECT LOWER(PAYLOAD:dish_name::STRING) AS DISH_KEY
+        SELECT LOWER(
+          COALESCE(
+            PAYLOAD:dish_name::STRING,
+            PAYLOAD:DISH_NAME::STRING,
+            PAYLOAD:"dish_name"::STRING,
+            PAYLOAD:"DISH_NAME"::STRING
+          )
+        ) AS DISH_KEY
         FROM base
         WHERE EVENT_NAME = 'order_served'
       ),
       all_dishes AS (
-        SELECT DISH_KEY FROM requested
+        SELECT DISH_KEY FROM requested WHERE DISH_KEY IS NOT NULL AND DISH_KEY <> ''
         UNION
-        SELECT DISH_KEY FROM served
+        SELECT DISH_KEY FROM served WHERE DISH_KEY IS NOT NULL AND DISH_KEY <> ''
       )
       SELECT
         d.DISH_KEY,
@@ -332,7 +354,6 @@ export async function getDashboardMetrics(
       binds,
     );
 
-    const speedFallback = createFallbackDashboardMetrics(sessionId).speedTiers;
     const speedByLabel = speedRows.reduce<
       Record<string, { green: number; yellow: number; red: number }>
     >((acc, row) => {
@@ -345,8 +366,7 @@ export async function getDashboardMetrics(
       return acc;
     }, {});
 
-    const speedLabels =
-      speedRows.length > 0 ? speedRows.map((row) => asString(row, "LABEL")) : speedFallback.labels;
+    const speedLabels = speedRows.map((row) => asString(row, "LABEL"));
 
     const revenueByDish = toMap(revenueRows, "DISH_KEY", "REVENUE");
     const demandRequestedByDish = toMap(demandRows, "DISH_KEY", "REQUESTED");
@@ -390,9 +410,9 @@ export async function getDashboardMetrics(
       },
       speedTiers: {
         labels: speedLabels,
-        green: speedLabels.map((label, index) => speedByLabel[label]?.green ?? speedFallback.green[index] ?? 0),
-        yellow: speedLabels.map((label, index) => speedByLabel[label]?.yellow ?? speedFallback.yellow[index] ?? 0),
-        red: speedLabels.map((label, index) => speedByLabel[label]?.red ?? speedFallback.red[index] ?? 0),
+        green: speedLabels.map((label) => speedByLabel[label]?.green ?? 0),
+        yellow: speedLabels.map((label) => speedByLabel[label]?.yellow ?? 0),
+        red: speedLabels.map((label) => speedByLabel[label]?.red ?? 0),
       },
       revenuePerDish: {
         labels: DASHBOARD_DISHES.map((dish) => DISH_LABELS[dish]),
@@ -426,7 +446,7 @@ export async function getDashboardMetrics(
     };
   } catch (error) {
     console.error("[dashboard] metrics query failed", error);
-    return createFallbackDashboardMetrics(sessionId);
+    throw new Error("dashboard_metrics_unavailable");
   }
 }
 
