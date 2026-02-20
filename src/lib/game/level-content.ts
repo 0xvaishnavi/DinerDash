@@ -26,7 +26,7 @@ export const LEVEL_STORY_CONTENT: Record<number, LevelStoryContent> = {
     subtitle: '"First Day on the Job"',
     difficulty: "⭐",
     storyText:
-      "Welcome to your first day at Chai & Chaat Café! Serve customers their favorite dishes and keep them happy.",
+      "Welcome to your first day at Diner Dash! Serve customers their favorite dishes and keep them happy.",
     levelDescription:
       "You only have 4 tables to manage, and you can carry one plate at a time. Focus on matching the right dish to each order!",
     completionMessage: "Great job! You're getting the hang of it. Let's add more tables!",

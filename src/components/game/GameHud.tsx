@@ -46,7 +46,7 @@ export function GameHud({
           <p className="text-xs uppercase tracking-wide text-amber-950/65">Revenue</p>
           <p className="flex items-center gap-1 text-lg font-semibold">
             <Image src={COIN_ICON} alt="Coin" width={18} height={18} />
-            <span>INR {revenue}</span>
+            <span>${revenue}</span>
           </p>
         </div>
         <div>
@@ -78,7 +78,7 @@ export function GameHud({
         </div>
       </div>
       <p className="mt-3 rounded-lg bg-amber-50/80 px-3 py-2 text-sm font-semibold text-amber-950">
-        To get promoted, your target revenue is <span className="text-[color:var(--saffron)]">₹{targetRevenue}</span>.
+        To get promoted, your target revenue is <span className="text-[color:var(--saffron)]">${targetRevenue}</span>.
       </p>
     </header>
   );

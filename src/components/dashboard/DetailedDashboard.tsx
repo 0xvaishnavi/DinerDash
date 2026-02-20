@@ -205,7 +205,7 @@ export function DetailedDashboard({ onResolved }: DetailedDashboardProps) {
       labels: metrics?.revenuePerDish.labels ?? [],
       datasets: [
         {
-          label: "Revenue (INR)",
+          label: "Revenue (USD)",
           data: metrics?.revenuePerDish.values ?? [],
           backgroundColor: ["#d4500a", "#800020", "#c8960c", "#00a693", "#6b3f1d"],
           borderRadius: 8,
@@ -319,7 +319,7 @@ export function DetailedDashboard({ onResolved }: DetailedDashboardProps) {
       },
       {
         label: "Revenue",
-        value: `INR ${(metrics?.kpis.revenue ?? 0).toLocaleString("en-IN")}`,
+        value: `$${(metrics?.kpis.revenue ?? 0).toLocaleString("en-US")}`,
         tone: "text-amber-700",
         icon: "/elements/coin.png",
       },

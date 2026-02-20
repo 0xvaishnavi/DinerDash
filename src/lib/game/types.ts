@@ -1,9 +1,10 @@
 export const DISHES = [
-  "dosa",
+  "chicken",
+  "pizza",
+  "ramen",
+  "taco",
+  "sushi",
   "chole_bhature",
-  "parathe",
-  "pani_puri",
-  "vada_pav",
 ] as const;
 
 export type DishName = (typeof DISHES)[number];
@@ -30,6 +31,7 @@ export interface LevelConfig {
   spawnIntervalMs: number;
   minScore: number;
   bestScoreTarget: number;
+  dishCount: number;
 }
 
 export interface PlateSlot {

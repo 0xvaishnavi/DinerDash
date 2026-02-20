@@ -2,10 +2,10 @@
   <img src="public/logo.png" alt="Diner Dash Logo" width="120" />
 </p>
 
-<h1 align="center">Diner Dash: India Edition</h1>
+<h1 align="center">Diner Dash</h1>
 
 <p align="center">
-  A fast-paced Indian restaurant simulation where every gameplay action emits structured events and powers live operational analytics.
+  A fast-paced restaurant simulation where every gameplay action emits structured events and powers live operational analytics.
 </p>
 
 <p align="center">

@@ -1,4 +1,4 @@
-import type { LevelConfig, SpeedTier } from "./types";
+import { DISHES, type DishName, type LevelConfig, type SpeedTier } from "./types";
 
 export const BASE_ROUND_DURATION_SECONDS = 60;
 export const ORDER_DURATION_SECONDS = 15;
@@ -15,6 +15,7 @@ export const LEVEL_CONFIGS: LevelConfig[] = [
     spawnIntervalMs: 8_000,
     minScore: 800,
     bestScoreTarget: 3_220,
+    dishCount: 4,
   },
   {
     id: 2,
@@ -25,6 +26,7 @@ export const LEVEL_CONFIGS: LevelConfig[] = [
     spawnIntervalMs: 6_000,
     minScore: 1_400,
     bestScoreTarget: 6_120,
+    dishCount: 5,
   },
   {
     id: 3,
@@ -35,6 +37,7 @@ export const LEVEL_CONFIGS: LevelConfig[] = [
     spawnIntervalMs: 4_000,
     minScore: 2_100,
     bestScoreTarget: 8_660,
+    dishCount: 6,
   },
   {
     id: 4,
@@ -45,6 +48,7 @@ export const LEVEL_CONFIGS: LevelConfig[] = [
     spawnIntervalMs: 2_500,
     minScore: 3_200,
     bestScoreTarget: 106_560,
+    dishCount: 6,
   },
 ];
 
@@ -77,4 +81,9 @@ export const SCORE_RULES: Record<
 
 export function getLevelConfig(level: number): LevelConfig {
   return LEVEL_CONFIGS.find((cfg) => cfg.id === level) ?? LEVEL_CONFIGS[0];
+}
+
+export function getLevelDishes(level: number): readonly DishName[] {
+  const config = getLevelConfig(level);
+  return DISHES.slice(0, config.dishCount);
 }

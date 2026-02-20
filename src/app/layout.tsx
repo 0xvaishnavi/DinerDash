@@ -18,7 +18,7 @@ const baloo = Baloo_2({
 });
 
 export const metadata: Metadata = {
-  title: "Diner Dash India Edition",
+  title: "Diner Dash",
   description: "Event-driven restaurant simulation starter template",
   icons: {
     icon: "/logo.png",

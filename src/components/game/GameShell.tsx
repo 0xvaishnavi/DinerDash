@@ -25,7 +25,7 @@ import {
   TABLE_SPRITE,
   WAITER_SPRITE,
 } from "@/lib/game/assets";
-import { LEVEL_CONFIGS, ORDER_DURATION_SECONDS, getLevelConfig } from "@/lib/game/config";
+import { LEVEL_CONFIGS, ORDER_DURATION_SECONDS, getLevelConfig, getLevelDishes } from "@/lib/game/config";
 import { getScoreOutcomeByServeTime, getStarRating } from "@/lib/game/scoring";
 import { useGameStore } from "@/lib/game/store";
 import { DISHES, type DishName } from "@/lib/game/types";
@@ -181,8 +181,8 @@ function pickCustomerSprite(
   return { seated, standing };
 }
 
-function pickOrderDishes(level: number, activeCustomers: ActiveCustomer[]): DishName[] {
-  const demand = DISHES.reduce(
+function pickOrderDishes(level: number, activeCustomers: ActiveCustomer[], availableDishes: readonly DishName[]): DishName[] {
+  const demand = availableDishes.reduce(
     (acc, dish) => {
       acc[dish] = 0;
       return acc;
@@ -192,12 +192,14 @@ function pickOrderDishes(level: number, activeCustomers: ActiveCustomer[]): Dish
 
   for (const customer of activeCustomers) {
     for (const pendingDish of getPendingDishes(customer)) {
-      demand[pendingDish] += 1;
+      if (pendingDish in demand) {
+        demand[pendingDish] += 1;
+      }
     }
   }
 
-  const firstMin = Math.min(...DISHES.map((dish) => demand[dish]));
-  const firstChoices = DISHES.filter((dish) => demand[dish] === firstMin);
+  const firstMin = Math.min(...availableDishes.map((dish) => demand[dish]));
+  const firstChoices = availableDishes.filter((dish) => demand[dish] === firstMin);
   const first = firstChoices[Math.floor(Math.random() * firstChoices.length)];
   const doubleOrderChance =
     level <= 1 ? 0 : level === 2 ? 0.45 : level === 3 ? 0.55 : 0.7;
@@ -206,7 +208,7 @@ function pickOrderDishes(level: number, activeCustomers: ActiveCustomer[]): Dish
     return [first];
   }
 
-  const secondPool = DISHES.filter((dish) => dish !== first);
+  const secondPool = availableDishes.filter((dish) => dish !== first);
   const secondMin = Math.min(...secondPool.map((dish) => demand[dish]));
   const secondChoices = secondPool.filter((dish) => demand[dish] === secondMin);
   const second = secondChoices[Math.floor(Math.random() * secondChoices.length)];
@@ -524,6 +526,7 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
   }, []);
 
   const currentLevelConfig = useMemo(() => getLevelConfig(level), [level]);
+  const levelDishes = useMemo(() => getLevelDishes(level), [level]);
   const maxLevel = useMemo(
     () => LEVEL_CONFIGS[LEVEL_CONFIGS.length - 1]?.id ?? 4,
     [],
@@ -577,7 +580,7 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
     let nearestDish: DishName | null = null;
     let nearestDistance = Number.POSITIVE_INFINITY;
 
-    for (const dish of DISHES) {
+    for (const dish of levelDishes) {
       const dishEl = counterDishRefs.current[dish];
       if (!dishEl) {
         continue;
@@ -599,7 +602,7 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
     }
 
     return null;
-  }, []);
+  }, [levelDishes]);
 
   const resetWaiterPosition = useCallback(() => {
     const floor = floorRef.current;
@@ -798,7 +801,7 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
     const orderId = `order-${uuidv4().slice(0, 8)}`;
     const customerType = pickCustomerType(levelRef.current);
     const spriteSet = pickCustomerSprite(customerType, current);
-    const dishesRequested: DishName[] = pickOrderDishes(levelRef.current, current);
+    const dishesRequested: DishName[] = pickOrderDishes(levelRef.current, current, getLevelDishes(levelRef.current));
 
     const customer: ActiveCustomer = {
       customerId,
@@ -915,7 +918,7 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
           playSfx("levelComplete", { volume: 0.95 });
         }
         setFeedback(
-          `Round Complete! Total Revenue: ₹${finalState.revenue} | Reputation: ${finalState.reputation}`,
+          `Round Complete! Total Revenue: $${finalState.revenue} | Reputation: ${finalState.reputation}`,
         );
         try {
           window.localStorage.setItem(
@@ -1538,7 +1541,7 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
         >
           <Image
             src={FLOOR_BACKGROUND}
-            alt="Indian cafe floor"
+            alt="cafe floor"
             fill
             className="scale-[1.02] object-cover object-center opacity-90"
           />
@@ -1816,8 +1819,8 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
                 "linear-gradient(rgba(70,37,23,0.72), rgba(70,37,23,0.72)), repeating-linear-gradient(90deg, #8a512f 0 16px, #744327 16px 32px)",
             }}
           >
-            <div className="grid grid-cols-5 gap-1">
-              {DISHES.map((dish) => {
+            <div className={`grid gap-1 ${levelDishes.length <= 4 ? "grid-cols-4" : levelDishes.length === 5 ? "grid-cols-5" : "grid-cols-6"}`}>
+              {levelDishes.map((dish) => {
                 const cooldownUntil = counterCooldowns[dish] ?? 0;
                 const isReady = cooldownUntil <= clockMs;
 
@@ -1831,7 +1834,7 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
                     onClick={() => void onPickDishFromCounter(dish)}
                     className="rounded-lg border border-transparent bg-transparent p-1 text-center transition focus-visible:outline-none focus-visible:ring-0"
                   >
-                    <div className="mx-auto flex h-[72px] w-[72px] items-center justify-center">
+                    <div className="mx-auto flex h-[60px] w-[60px] items-center justify-center sm:h-[72px] sm:w-[72px]">
                       <AnimatePresence initial={false} mode="wait">
                         <motion.div
                           key={isReady ? `${dish}-ready` : `${dish}-empty`}
@@ -1845,7 +1848,7 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
                             alt={DISH_ASSETS[dish].label}
                             width={66}
                             height={66}
-                            className={`${
+                            className={`h-[46px] w-[46px] sm:h-[66px] sm:w-[66px] ${
                               isReady
                                 ? nearCounterDish === dish
                                   ? "drop-shadow-[0_0_26px_rgba(255,255,255,0.72)]"
@@ -1922,7 +1925,7 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
               Dishes Served
             </p>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-              {DISHES.map((dish) => (
+              {levelDishes.map((dish) => (
                 <div
                   key={dish}
                   className="flex flex-col items-center rounded-xl border border-amber-900/15 bg-white/85 px-2 py-3 text-center shadow-[0_4px_10px_rgba(60,37,18,0.12)]"
@@ -1967,13 +1970,13 @@ export function GameShell({ onRoundComplete }: GameShellProps) {
               <p className="mt-2 text-sm font-semibold text-amber-950">
                 {roundResult.revenue >= currentLevelConfig.minScore
                   ? "Great shift. You hit the revenue target for this level."
-                  : `Target not reached. Need ₹${currentLevelConfig.minScore - roundResult.revenue} more to clear this level.`}
+                  : `Target not reached. Need $${currentLevelConfig.minScore - roundResult.revenue} more to clear this level.`}
               </p>
 
               <div className="mt-4 grid grid-cols-2 gap-2 text-left">
                 <div className="rounded-xl bg-white/80 px-3 py-2">
                   <p className="text-xs uppercase tracking-wide text-amber-950/65">Revenue</p>
-                  <p className="text-lg font-bold text-amber-700">₹{roundResult.revenue}</p>
+                  <p className="text-lg font-bold text-amber-700">${roundResult.revenue}</p>
                 </div>
                 <div className="rounded-xl bg-white/80 px-3 py-2">
                   <p className="text-xs uppercase tracking-wide text-amber-950/65">Reputation</p>

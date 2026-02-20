@@ -6,25 +6,29 @@ export interface DishAsset {
 }
 
 export const DISH_ASSETS: Record<DishName, DishAsset> = {
-  dosa: {
-    label: "Dosa",
-    image: "/dish/masala-dosa.png",
+  chicken: {
+    label: "Chicken Tikka",
+    image: "/dish/chiken.png",
+  },
+  pizza: {
+    label: "Pizza",
+    image: "/dish/pizza.png",
+  },
+  ramen: {
+    label: "Ramen",
+    image: "/dish/ramen.png",
+  },
+  taco: {
+    label: "Taco",
+    image: "/dish/taco.png",
+  },
+  sushi: {
+    label: "Sushi",
+    image: "/dish/sushi.png",
   },
   chole_bhature: {
     label: "Chole Bhature",
     image: "/dish/chole-bhature.png",
-  },
-  parathe: {
-    label: "Parathe",
-    image: "/dish/parathe.png",
-  },
-  pani_puri: {
-    label: "Pani Puri",
-    image: "/dish/pani-puri.png",
-  },
-  vada_pav: {
-    label: "Vada Pav",
-    image: "/dish/vada-pao.png",
   },
 };
 

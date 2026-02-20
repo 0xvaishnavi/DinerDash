@@ -1,19 +1,21 @@
 export const DASHBOARD_DISHES = [
-  "dosa",
+  "chicken",
+  "pizza",
+  "ramen",
+  "taco",
+  "sushi",
   "chole_bhature",
-  "parathe",
-  "pani_puri",
-  "vada_pav",
 ] as const;
 
 export type DashboardDishKey = (typeof DASHBOARD_DISHES)[number];
 
 export const DISH_LABELS: Record<DashboardDishKey, string> = {
-  dosa: "Dosa",
+  chicken: "Chicken Tikka",
+  pizza: "Pizza",
+  ramen: "Ramen",
+  taco: "Taco",
+  sushi: "Sushi",
   chole_bhature: "Chole Bhature",
-  parathe: "Parathe",
-  pani_puri: "Pani Puri",
-  vada_pav: "Vada Pav",
 };
 
 export const EXPECTED_EVENT_TYPES = [
@@ -108,8 +110,8 @@ export function createFallbackDashboardMetrics(sessionId: string | null): Dashbo
       red: [3, 3, 2, 2, 1],
     },
     revenuePerDish: {
-      labels: ["Dosa", "Chole Bhature", "Parathe", "Pani Puri", "Vada Pav"],
-      values: [1220, 940, 860, 990, 740],
+      labels: ["Chicken Tikka", "Pizza", "Ramen", "Taco", "Sushi", "Chole Bhature"],
+      values: [1220, 940, 860, 990, 740, 810],
     },
     utilization: {
       labels: ["0s", "10s", "20s", "30s", "40s", "50s", "60s"],
@@ -125,9 +127,9 @@ export function createFallbackDashboardMetrics(sessionId: string | null): Dashbo
       expired: [0, 1, 2, 3, 3, 2],
     },
     demandVsServed: {
-      labels: ["Dosa", "Chole Bhature", "Parathe", "Pani Puri", "Vada Pav"],
-      requested: [29, 24, 20, 23, 18],
-      served: [26, 22, 18, 21, 16],
+      labels: ["Chicken Tikka", "Pizza", "Ramen", "Taco", "Sushi", "Chole Bhature"],
+      requested: [29, 24, 20, 23, 18, 22],
+      served: [26, 22, 18, 21, 16, 19],
     },
     validation: {
       totalEvents: 0,

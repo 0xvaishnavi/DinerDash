@@ -15,25 +15,25 @@ export function DishPanel({ dishes, onPickDish }: DishPanelProps) {
       <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--maroon)]">
         Dish Panel
       </p>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
+      <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-6 sm:gap-2">
         {dishes.map((dish) => (
           <button
             key={dish}
             type="button"
             className={cn(
-              "btn-secondary h-20 border-[color:var(--maroon)] bg-white px-2 text-sm",
+              "btn-secondary h-14 border-[color:var(--maroon)] bg-white px-1 text-xs sm:h-20 sm:px-2 sm:text-sm",
             )}
             onClick={() => onPickDish(dish)}
           >
-            <span className="flex items-center gap-2">
+            <span className="flex flex-col items-center gap-1 sm:flex-row sm:gap-2">
               <Image
                 src={DISH_ASSETS[dish].image}
                 alt={DISH_ASSETS[dish].label}
                 width={48}
                 height={48}
-                className="rounded"
+                className="h-[34px] w-[34px] rounded sm:h-[48px] sm:w-[48px]"
               />
-              <span className="text-left font-semibold leading-tight">
+              <span className="text-center font-semibold leading-tight sm:text-left">
                 {DISH_ASSETS[dish].label}
               </span>
             </span>

@@ -8,12 +8,12 @@ import { registerChartJs } from "@/lib/charts/register";
 registerChartJs();
 
 const previewData = {
-  labels: ["Dosa", "Chole Bhature", "Parathe", "Pani Puri", "Vada Pav"],
+  labels: ["Chicken Tikka", "Pizza", "Ramen", "Taco", "Sushi", "Chole Bhature"],
   datasets: [
     {
       label: "Coins per Dish",
-      data: [320, 260, 200, 240, 180],
-      backgroundColor: ["#d4500a", "#800020", "#00a693", "#c8960c", "#3f2917"],
+      data: [320, 260, 200, 240, 180, 280],
+      backgroundColor: ["#d4500a", "#800020", "#00a693", "#c8960c", "#3f2917", "#e65100"],
       borderRadius: 6,
     },
   ],
